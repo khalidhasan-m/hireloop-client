@@ -96,7 +96,7 @@ export default function Footer() {
 
           {/* Copyright & Policies */}
           <div className="flex flex-col sm:flex-row items-center gap-4 text-xs text-gray-500">
-            <span>Copyright 2024 — Programming Hero</span>
+            <span>Copyright 2026 — Hire Loop</span>
             <div className="hidden sm:block w-1 h-1 rounded-full bg-gray-700" />
             <div className="flex gap-4">
               <Link href="/terms" className="hover:text-gray-300 transition-colors">Terms & Policy</Link>
