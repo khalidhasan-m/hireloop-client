@@ -1,34 +1,29 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@heroui/react";
 import { authClient } from "@/lib/auth-client";
 import toast from "react-hot-toast";
 import {
-  HiCheck,
+  HiArrowLeft,
+  HiEnvelope,
   HiEye,
   HiEyeSlash,
   HiLockClosed,
-  HiUser,
-  HiEnvelope,
-  HiArrowLeft,
 } from "react-icons/hi2";
 
-export default function SignUpPage() {
+export default function LoginPage() {
   const router = useRouter();
 
   const [formData, setFormData] = useState({
-    name: "",
     email: "",
     password: "",
-    confirmPassword: "",
   });
 
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
 
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -47,130 +42,63 @@ export default function SignUpPage() {
     }
   };
 
-  const passwordRules = useMemo(() => {
-    return {
-      length: formData.password.length >= 8,
-      uppercase: /[A-Z]/.test(formData.password),
-      lowercase: /[a-z]/.test(formData.password),
-      number: /\d/.test(formData.password),
-      special: /[^A-Za-z0-9]/.test(formData.password),
-    };
-  }, [formData.password]);
-
-  const passwordScore = Object.values(passwordRules).filter(Boolean).length;
-
-  const passwordStrength = useMemo(() => {
-    if (!formData.password) {
-      return {
-        label: "",
-        width: "0%",
-      };
-    }
-
-    if (passwordScore <= 2) {
-      return {
-        label: "Weak",
-        width: "35%",
-      };
-    }
-
-    if (passwordScore <= 4) {
-      return {
-        label: "Good",
-        width: "70%",
-      };
-    }
-
-    return {
-      label: "Strong",
-      width: "100%",
-    };
-  }, [passwordScore, formData.password]);
-
-  const isPasswordValid = passwordScore === 5;
-
-  const isPasswordMatched =
-    formData.password &&
-    formData.confirmPassword &&
-    formData.password === formData.confirmPassword;
-
-  const canSubmit =
-    formData.name.trim() &&
-    formData.email.trim() &&
-    isPasswordValid &&
-    isPasswordMatched &&
-    agreeTerms &&
-    !loading;
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     setError("");
 
-    if (!formData.name.trim()) {
-      const message = "Please enter your full name.";
-      setError(message);
-      toast.error(message);
-      return;
-    }
+    const email = formData.email.trim().toLowerCase();
+    const password = formData.password;
 
-    if (!formData.email.trim()) {
+    if (!email) {
       const message = "Please enter your email address.";
+
       setError(message);
       toast.error(message);
+
       return;
     }
 
-    if (!isPasswordValid) {
-      const message = "Please create a stronger password.";
-      setError(message);
-      toast.error(message);
-      return;
-    }
+    if (!password) {
+      const message = "Please enter your password.";
 
-    if (!isPasswordMatched) {
-      const message = "Passwords do not match.";
       setError(message);
       toast.error(message);
-      return;
-    }
 
-    if (!agreeTerms) {
-      const message = "Please agree to the Terms and Privacy Policy.";
-      setError(message);
-      toast.error(message);
       return;
     }
 
     try {
       setLoading(true);
 
-      const { data, error: signUpError } = await authClient.signUp.email({
-        name: formData.name.trim(),
-        email: formData.email.trim().toLowerCase(),
-        password: formData.password,
+      const { data, error: signInError } = await authClient.signIn.email({
+        email,
+        password,
+        rememberMe,
         callbackURL: "/",
       });
 
-      if (signUpError) {
-        const message = signUpError.message || "Unable to create your account.";
+      if (signInError) {
+        const message =
+          signInError.message || "Invalid email or password. Please try again.";
 
         setError(message);
         toast.error(message);
+
         return;
       }
 
       if (data) {
-        toast.success("Account created successfully!");
+        toast.success("Welcome back to HireLoop!");
 
         router.push("/");
         router.refresh();
       }
     } catch (err) {
-      console.error("Signup error:", err);
+      console.error("Login error:", err);
 
       const message =
-        "Something went wrong while creating your account. Please try again.";
+        "Something went wrong while signing you in. Please try again.";
 
       setError(message);
       toast.error(message);
@@ -179,7 +107,7 @@ export default function SignUpPage() {
     }
   };
 
-  const handleGoogleSignUp = async () => {
+  const handleGoogleLogin = async () => {
     try {
       setError("");
       setGoogleLoading(true);
@@ -189,7 +117,7 @@ export default function SignUpPage() {
         callbackURL: "/",
       });
     } catch (err) {
-      console.error("Google signup error:", err);
+      console.error("Google login error:", err);
 
       const message = "Unable to continue with Google. Please try again.";
 
@@ -213,14 +141,14 @@ export default function SignUpPage() {
         {/* Center glow */}
         <div className="absolute left-1/2 top-1/2 h-125 w-175 -translate-x-1/2 -translate-y-1/2 rounded-full bg-purple-600/[0.035] blur-[140px]" />
 
-        {/* Side glows */}
+        {/* Side glow */}
         <div className="absolute -left-62.5 top-1/3 h-87.5 w-87.5 rounded-full bg-indigo-500/2.5 blur-[120px]" />
 
         <div className="absolute -right-62.5 top-1/2 h-100 w-100 rounded-full bg-purple-500/2.5 blur-[120px]" />
       </div>
 
       {/* =====================================================
-          BACK
+          BACK TO HOME
       ====================================================== */}
 
       <div className="absolute left-5 top-5 z-20 sm:left-8 sm:top-8">
@@ -238,7 +166,7 @@ export default function SignUpPage() {
       ====================================================== */}
 
       <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-14 sm:px-6 lg:px-8">
-        <div className="w-full max-w-115">
+        <div className="w-full max-w-107.5">
           {/* =================================================
               LOGO
           ================================================== */}
@@ -259,7 +187,7 @@ export default function SignUpPage() {
           ================================================== */}
 
           <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0b0b0f]/90 p-5 shadow-[0_25px_80px_rgba(0,0,0,.45)] backdrop-blur-xl sm:p-7">
-            {/* subtle top glow */}
+            {/* Top highlight */}
             <div className="pointer-events-none absolute left-1/2 top-0 h-px w-2/3 -translate-x-1/2 bg-linear-to-r from-transparent via-indigo-400/40 to-transparent" />
 
             {/* =================================================
@@ -268,21 +196,21 @@ export default function SignUpPage() {
 
             <div className="text-center">
               <h1 className="text-2xl font-semibold tracking-[-0.035em] text-white sm:text-[28px]">
-                Create your account
+                Welcome back
               </h1>
 
               <p className="mt-2 text-xs leading-5 text-gray-500">
-                Start your journey to finding your dream job.
+                Sign in to continue to your HireLoop account.
               </p>
             </div>
 
             {/* =================================================
-                GOOGLE BUTTON
+                GOOGLE
             ================================================== */}
 
             <Button
               type="button"
-              onPress={handleGoogleSignUp}
+              onPress={handleGoogleLogin}
               isDisabled={googleLoading || loading}
               className="mt-6 h-11 w-full rounded-xl border border-white/10 bg-white text-sm font-medium text-black transition hover:bg-gray-100"
             >
@@ -318,32 +246,6 @@ export default function SignUpPage() {
             ================================================== */}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Name */}
-              <div>
-                <label
-                  htmlFor="name"
-                  className="mb-1.5 block text-xs font-medium text-gray-300"
-                >
-                  Full name
-                </label>
-
-                <div className="relative">
-                  <HiUser className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-sm text-gray-600" />
-
-                  <input
-                    id="name"
-                    name="name"
-                    type="text"
-                    autoComplete="name"
-                    placeholder="John Doe"
-                    value={formData.name}
-                    onChange={handleChange}
-                    disabled={loading}
-                    className="h-11 w-full rounded-xl border border-white/10 bg-[#101014] pl-10 pr-3 text-sm text-white outline-none transition placeholder:text-gray-600 hover:border-white/15 focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:opacity-60"
-                  />
-                </div>
-              </div>
-
               {/* Email */}
               <div>
                 <label
@@ -380,19 +282,12 @@ export default function SignUpPage() {
                     Password
                   </label>
 
-                  {formData.password && (
-                    <span
-                      className={`text-[10px] font-medium ${
-                        passwordScore <= 2
-                          ? "text-red-400"
-                          : passwordScore <= 4
-                            ? "text-yellow-400"
-                            : "text-emerald-400"
-                      }`}
-                    >
-                      {passwordStrength.label}
-                    </span>
-                  )}
+                  <Link
+                    href="/auth/forgot-password"
+                    className="text-[10px] font-medium text-indigo-400 transition hover:text-indigo-300"
+                  >
+                    Forgot password?
+                  </Link>
                 </div>
 
                 <div className="relative">
@@ -402,8 +297,8 @@ export default function SignUpPage() {
                     id="password"
                     name="password"
                     type={showPassword ? "text" : "password"}
-                    autoComplete="new-password"
-                    placeholder="Create a strong password"
+                    autoComplete="current-password"
+                    placeholder="Enter your password"
                     value={formData.password}
                     onChange={handleChange}
                     disabled={loading}
@@ -425,179 +320,70 @@ export default function SignUpPage() {
                     )}
                   </button>
                 </div>
-
-                {/* Strength bar */}
-                {formData.password && (
-                  <div className="mt-2">
-                    <div className="h-1 overflow-hidden rounded-full bg-white/5">
-                      <div
-                        className={`h-full rounded-full transition-all duration-300 ${
-                          passwordScore <= 2
-                            ? "bg-red-500"
-                            : passwordScore <= 4
-                              ? "bg-yellow-500"
-                              : "bg-emerald-500"
-                        }`}
-                        style={{
-                          width: passwordStrength.width,
-                        }}
-                      />
-                    </div>
-
-                    <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1">
-                      <PasswordRule
-                        passed={passwordRules.length}
-                        text="8+ characters"
-                      />
-
-                      <PasswordRule
-                        passed={passwordRules.uppercase}
-                        text="Uppercase letter"
-                      />
-
-                      <PasswordRule
-                        passed={passwordRules.lowercase}
-                        text="Lowercase letter"
-                      />
-
-                      <PasswordRule
-                        passed={passwordRules.number}
-                        text="Number"
-                      />
-
-                      <PasswordRule
-                        passed={passwordRules.special}
-                        text="Special character"
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
 
-              {/* Confirm password */}
-              <div>
-                <label
-                  htmlFor="confirmPassword"
-                  className="mb-1.5 block text-xs font-medium text-gray-300"
-                >
-                  Confirm password
-                </label>
+              {/* =================================================
+                  REMEMBER ME
+              ================================================== */}
 
-                <div className="relative">
-                  <HiLockClosed className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-sm text-gray-600" />
-
-                  <input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
-                    autoComplete="new-password"
-                    placeholder="Repeat your password"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    disabled={loading}
-                    className={`h-11 w-full rounded-xl border bg-[#101014] pl-10 pr-11 text-sm text-white outline-none transition placeholder:text-gray-600 disabled:cursor-not-allowed disabled:opacity-60 ${
-                      formData.confirmPassword && !isPasswordMatched
-                        ? "border-red-500/30 focus:border-red-500/40"
-                        : formData.confirmPassword && isPasswordMatched
-                          ? "border-emerald-500/30 focus:border-emerald-500/40"
-                          : "border-white/10 hover:border-white/15 focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/10"
-                    }`}
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword((prev) => !prev)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 transition hover:text-white"
-                    aria-label={
-                      showConfirmPassword ? "Hide password" : "Show password"
-                    }
-                  >
-                    {showConfirmPassword ? (
-                      <HiEyeSlash className="text-base" />
-                    ) : (
-                      <HiEye className="text-base" />
-                    )}
-                  </button>
-                </div>
-
-                {formData.confirmPassword && !isPasswordMatched && (
-                  <p className="mt-1.5 text-[10px] text-red-400">
-                    Passwords do not match.
-                  </p>
-                )}
-
-                {formData.confirmPassword && isPasswordMatched && (
-                  <p className="mt-1.5 flex items-center gap-1 text-[10px] text-emerald-400">
-                    <HiCheck />
-                    Passwords match.
-                  </p>
-                )}
-              </div>
-
-              {/* Terms */}
-              <label className="flex cursor-pointer items-start gap-2.5 pt-1">
+              <label className="flex cursor-pointer items-center gap-2.5 pt-1">
                 <input
                   type="checkbox"
-                  checked={agreeTerms}
-                  onChange={(e) => setAgreeTerms(e.target.checked)}
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
                   disabled={loading}
-                  className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-indigo-500"
+                  className="h-4 w-4 cursor-pointer accent-indigo-500"
                 />
 
-                <span className="text-[10px] leading-5 text-gray-500">
-                  I agree to the{" "}
-                  <Link
-                    href="/terms"
-                    className="text-gray-300 transition hover:text-white"
-                  >
-                    Terms of Service
-                  </Link>{" "}
-                  and{" "}
-                  <Link
-                    href="/privacy"
-                    className="text-gray-300 transition hover:text-white"
-                  >
-                    Privacy Policy
-                  </Link>
-                  .
-                </span>
+                <span className="text-[10px] text-gray-500">Remember me</span>
               </label>
 
-              {/* Error */}
+              {/* =================================================
+                  ERROR
+              ================================================== */}
+
               {error && (
                 <div className="rounded-xl border border-red-500/20 bg-red-500/6 px-3 py-2.5">
                   <p className="text-[11px] leading-5 text-red-400">{error}</p>
                 </div>
               )}
 
-              {/* Submit */}
+              {/* =================================================
+                  LOGIN BUTTON
+              ================================================== */}
+
               <Button
                 type="submit"
-                isDisabled={!canSubmit}
+                isDisabled={
+                  loading ||
+                  googleLoading ||
+                  !formData.email.trim() ||
+                  !formData.password
+                }
                 className="h-11 w-full rounded-xl bg-indigo-500 text-sm font-medium text-white transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-gray-600"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
-                    Creating account...
+                    Signing in...
                   </span>
                 ) : (
-                  "Create account"
+                  "Sign in"
                 )}
               </Button>
             </form>
 
             {/* =================================================
-                LOGIN
+                SIGNUP
             ================================================== */}
 
             <p className="mt-6 text-center text-xs text-gray-500">
-              Already have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Link
-                href="/auth/login"
+                href="/auth/signup"
                 className="font-medium text-indigo-400 transition hover:text-indigo-300"
               >
-                Sign in
+                Create an account
               </Link>
             </p>
           </div>
@@ -609,29 +395,5 @@ export default function SignUpPage() {
         </div>
       </div>
     </main>
-  );
-}
-
-/* =========================================================
-   PASSWORD RULE
-========================================================= */
-
-function PasswordRule({ passed, text }) {
-  return (
-    <div
-      className={`flex items-center gap-1.5 text-[9px] ${
-        passed ? "text-emerald-400" : "text-gray-600"
-      }`}
-    >
-      <span
-        className={`flex h-3 w-3 items-center justify-center rounded-full border ${
-          passed ? "border-emerald-500/40 bg-emerald-500/10" : "border-white/10"
-        }`}
-      >
-        {passed && <HiCheck className="text-[8px]" />}
-      </span>
-
-      {text}
-    </div>
   );
 }

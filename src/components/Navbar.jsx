@@ -1,15 +1,26 @@
 "use client";
+
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@heroui/react";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
+
+  const handleSignIn = () => {
+    setIsOpen(false);
+    router.push("/auth/login");
+  };
 
   return (
-    <div className="w-full flex justify-center px-4 pt-4 bg-[#030305]">
-      <nav className="w-full max-w-6xl bg-[#1c1c1e]/80 backdrop-blur-md border border-white/10 rounded-2xl px-6 py-3 flex items-center justify-between shadow-lg relative">
-        {/* Left: Logo */}
+    <div className="flex w-full justify-center bg-[#030305] px-4 pt-4">
+      <nav className="relative flex w-full max-w-6xl items-center justify-between rounded-2xl border border-white/10 bg-[#1c1c1e]/80 px-6 py-3 shadow-lg backdrop-blur-md">
+        {/* =====================================================
+            LOGO
+        ====================================================== */}
+
         <div className="flex items-center">
           <Link href="/" className="flex items-center">
             <span className="text-2xl font-black tracking-tight text-white">
@@ -19,54 +30,82 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* Desktop Nav Links & CTA */}
-        <div className="hidden md:flex items-center gap-8">
+        {/* =====================================================
+            DESKTOP NAVIGATION
+        ====================================================== */}
+
+        <div className="hidden items-center gap-8 md:flex">
           <div className="flex items-center gap-6 text-sm font-medium text-gray-300">
-            <Link href="/jobs" className="hover:text-white transition-colors">
+            <Link href="/jobs" className="transition-colors hover:text-white">
               Browse Jobs
             </Link>
+
             <Link
               href="/companies"
-              className="hover:text-white transition-colors"
+              className="transition-colors hover:text-white"
             >
               Company
             </Link>
+
             <Link
               href="/pricing"
-              className="hover:text-white transition-colors"
+              className="transition-colors hover:text-white"
             >
               Pricing
             </Link>
           </div>
 
+          {/* Divider */}
           <div className="h-4 w-px bg-white/20" />
 
+          {/* Auth */}
           <div className="flex items-center gap-4">
-            <Link
-              href="/login"
-              className="text-sm font-medium text-gray-300 hover:text-white transition-colors"
+            {/* Sign In */}
+            <button
+              type="button"
+              onClick={handleSignIn}
+              className="cursor-pointer text-sm font-medium text-gray-300 transition-colors hover:text-white"
             >
               Sign In
+            </button>
+
+            {/* Get Started */}
+            <Link href="/auth/signup">
+              <Button
+                type="button"
+                className="
+                  rounded-xl
+                  bg-indigo-500
+                  px-5
+                  py-2
+                  font-medium
+                  text-white
+                  shadow-md
+                  transition-all
+                  hover:bg-indigo-400
+                  hover:shadow-[0_0_20px_rgba(99,102,241,0.25)]
+                "
+              >
+                Get Started
+              </Button>
             </Link>
-            <Button
-              as={Link}
-              href="/signup"
-              className="bg-linear-to-r from-blue-600 to-indigo-600 text-white font-medium px-5 py-2 rounded-xl shadow-md hover:opacity-90 transition-opacity"
-            >
-              Get Started
-            </Button>
           </div>
         </div>
 
-        {/* Mobile Menu Button */}
-        <div className="flex md:hidden items-center">
+        {/* =====================================================
+            MOBILE MENU BUTTON
+        ====================================================== */}
+
+        <div className="flex items-center md:hidden">
           <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="text-gray-300 hover:text-white focus:outline-none p-1"
+            type="button"
+            onClick={() => setIsOpen((prev) => !prev)}
+            className="rounded-lg p-1 text-gray-300 transition-colors hover:text-white focus:outline-none"
             aria-label="Toggle Menu"
+            aria-expanded={isOpen}
           >
             <svg
-              className="w-6 h-6"
+              className="h-6 w-6"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -90,50 +129,70 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* Mobile Dropdown Menu */}
+        {/* =====================================================
+            MOBILE MENU
+        ====================================================== */}
+
         {isOpen && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-[#1c1c1e] border border-white/10 rounded-2xl p-6 shadow-xl flex flex-col gap-4 md:hidden z-50">
+          <div className="absolute left-0 right-0 top-full z-50 mt-2 flex flex-col gap-4 rounded-2xl border border-white/10 bg-[#1c1c1e] p-6 shadow-xl md:hidden">
             <Link
               href="/jobs"
               onClick={() => setIsOpen(false)}
-              className="text-sm font-medium text-gray-300 hover:text-white transition-colors py-1"
+              className="py-1 text-sm font-medium text-gray-300 transition-colors hover:text-white"
             >
               Browse Jobs
             </Link>
+
             <Link
               href="/companies"
               onClick={() => setIsOpen(false)}
-              className="text-sm font-medium text-gray-300 hover:text-white transition-colors py-1"
+              className="py-1 text-sm font-medium text-gray-300 transition-colors hover:text-white"
             >
               Company
             </Link>
+
             <Link
               href="/pricing"
               onClick={() => setIsOpen(false)}
-              className="text-sm font-medium text-gray-300 hover:text-white transition-colors py-1"
+              className="py-1 text-sm font-medium text-gray-300 transition-colors hover:text-white"
             >
               Pricing
             </Link>
 
-            <div className="h-px w-full bg-white/10 my-1" />
+            <div className="my-1 h-px w-full bg-white/10" />
 
-            <div className="flex flex-col gap-3">
-              <Link
-                href="/login"
-                onClick={() => setIsOpen(false)}
-                className="text-sm font-medium text-gray-300 hover:text-white transition-colors py-1"
-              >
-                Sign In
-              </Link>
+            {/* Mobile Sign In */}
+            <button
+              type="button"
+              onClick={handleSignIn}
+              className="w-full cursor-pointer py-1 text-left text-sm font-medium text-gray-300 transition-colors hover:text-white"
+            >
+              Sign In
+            </button>
+
+            {/* Mobile Get Started */}
+            <Link
+              href="/auth/signup"
+              onClick={() => setIsOpen(false)}
+              className="w-full"
+            >
               <Button
-                as={Link}
-                href="/signup"
-                onClick={() => setIsOpen(false)}
-                className="w-full bg-linear-to-r from-blue-600 to-indigo-600 text-white font-medium py-2 rounded-xl shadow-md text-center"
+                type="button"
+                className="
+                  w-full
+                  rounded-xl
+                  bg-indigo-500
+                  py-2
+                  font-medium
+                  text-white
+                  shadow-md
+                  transition-all
+                  hover:bg-indigo-400
+                "
               >
                 Get Started
               </Button>
-            </div>
+            </Link>
           </div>
         )}
       </nav>
