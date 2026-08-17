@@ -59,225 +59,179 @@ export default function Navbar() {
   ];
 
   return (
-    <div className="flex w-full justify-center bg-[#030305] px-4 pt-4">
-      {/* =====================================================
-          NAVBAR
-      ====================================================== */}
-
-      <motion.nav
-        initial={{
-          opacity: 0,
-          y: -20,
-          scale: 0.98,
-        }}
-        animate={{
-          opacity: 1,
-          y: 0,
-          scale: 1,
-        }}
-        transition={{
-          duration: 0.7,
-          ease: [0.22, 1, 0.36, 1],
-        }}
-        className="
-          relative
-          flex
-          w-full
-          max-w-6xl
-          items-center
-          justify-between
-          rounded-2xl
-          border
-          border-white/10
-          bg-[#1c1c1e]/80
-          px-6
-          py-3
-          shadow-lg
-          backdrop-blur-md
-        "
-      >
+    <div className="relative z-100 flex w-full justify-center bg-[#030305] px-4 pt-4">
+      <div className="relative w-full max-w-6xl">
         {/* =====================================================
-            LOGO
+            NAVBAR
         ====================================================== */}
 
-        <motion.div
-          initial={{ opacity: 0, x: -15 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{
-            duration: 0.6,
-            delay: 0.15,
-            ease: "easeOut",
+        <motion.nav
+          initial={{
+            opacity: 0,
+            y: -20,
+            scale: 0.98,
           }}
-          className="flex items-center"
+          animate={{
+            opacity: 1,
+            y: 0,
+            scale: 1,
+          }}
+          transition={{
+            duration: 0.7,
+            ease: [0.22, 1, 0.36, 1],
+          }}
+          className="
+            relative
+            z-100
+            flex
+            w-full
+            items-center
+            justify-between
+            rounded-2xl
+            border
+            border-white/10
+            bg-[#1c1c1e]/80
+            px-6
+            py-3
+            shadow-lg
+            backdrop-blur-md
+          "
         >
-          <Link href="/" className="flex items-center">
-            <motion.span
-              whileHover={{
-                scale: 1.03,
-              }}
-              transition={{
-                type: "spring",
-                stiffness: 400,
-                damping: 20,
-              }}
-              className="text-2xl font-black tracking-tight text-white"
-            >
-              hire
-              <span className="text-blue-500">l</span>
-              <span className="text-orange-500">oop</span>
-            </motion.span>
-          </Link>
-        </motion.div>
-
-        {/* =====================================================
-            DESKTOP NAVIGATION
-        ====================================================== */}
-
-        <div className="hidden items-center gap-8 md:flex">
-          {/* Navigation Links */}
+          {/* =====================================================
+              LOGO
+          ====================================================== */}
 
           <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: 0.5,
-              delay: 0.25,
-            }}
-            className="flex items-center gap-6 text-sm font-medium text-gray-300"
-          >
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="group relative py-1 transition-colors hover:text-white"
-              >
-                {link.label}
-
-                {/* Animated underline */}
-                <motion.span
-                  className="
-                    absolute
-                    bottom-0
-                    left-0
-                    h-px
-                    w-full
-                    origin-left
-                    bg-indigo-400
-                  "
-                  initial={{
-                    scaleX: 0,
-                    opacity: 0,
-                  }}
-                  whileHover={{
-                    scaleX: 1,
-                    opacity: 1,
-                  }}
-                  transition={{
-                    duration: 0.25,
-                    ease: "easeOut",
-                  }}
-                />
-              </Link>
-            ))}
-          </motion.div>
-
-          {/* Divider */}
-
-          <motion.div
-            initial={{ opacity: 0, scaleY: 0 }}
-            animate={{ opacity: 1, scaleY: 1 }}
-            transition={{
-              duration: 0.5,
-              delay: 0.35,
-            }}
-            className="h-4 w-px bg-white/20"
-          />
-
-          {/* =================================================
-              AUTH
-          ================================================== */}
-
-          <motion.div
-            initial={{ opacity: 0, x: 15 }}
+            initial={{ opacity: 0, x: -15 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{
               duration: 0.6,
-              delay: 0.3,
+              delay: 0.15,
               ease: "easeOut",
             }}
-            className="flex items-center gap-4"
+            className="flex items-center"
           >
-            {isPending ? (
-              <motion.div
-                animate={{
-                  opacity: [0.4, 0.8, 0.4],
+            <Link href="/" className="flex items-center">
+              <motion.span
+                whileHover={{
+                  scale: 1.03,
                 }}
                 transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
+                  type: "spring",
+                  stiffness: 400,
+                  damping: 20,
                 }}
-                className="h-8 w-24 rounded-lg bg-white/5"
-              />
-            ) : user ? (
-              <>
-                {/* User Name */}
+                className="text-2xl font-black tracking-tight text-white"
+              >
+                hire
+                <span className="text-blue-500">l</span>
+                <span className="text-orange-500">oop</span>
+              </motion.span>
+            </Link>
+          </motion.div>
 
-                <motion.span
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="max-w-32 truncate text-sm font-medium text-gray-300"
+          {/* =====================================================
+              DESKTOP NAVIGATION
+          ====================================================== */}
+
+          <div className="hidden items-center gap-8 md:flex">
+            {/* Navigation Links */}
+
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.5,
+                delay: 0.25,
+              }}
+              className="flex items-center gap-6 text-sm font-medium text-gray-300"
+            >
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="group relative py-1 transition-colors hover:text-white"
                 >
-                  Hi, {user.name || "User"}
-                </motion.span>
+                  {link.label}
 
-                {/* Logout */}
-
-                <motion.div
-                  whileHover={{
-                    scale: 1.03,
-                    y: -1,
-                  }}
-                  whileTap={{
-                    scale: 0.97,
-                  }}
-                >
-                  <Button
-                    type="button"
-                    onPress={handleLogout}
-                    isDisabled={logoutLoading}
+                  <motion.span
                     className="
-                      rounded-xl
-                      border
-                      border-white/10
-                      bg-white/5
-                      px-5
-                      py-2
-                      font-medium
-                      text-gray-300
-                      transition-all
-                      hover:bg-white/10
-                      hover:text-white
+                      absolute
+                      bottom-0
+                      left-0
+                      h-px
+                      w-full
+                      origin-left
+                      bg-indigo-400
                     "
-                  >
-                    {logoutLoading ? (
-                      <span className="flex items-center gap-2">
-                        <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/20 border-t-white" />
-                        Logging out...
-                      </span>
-                    ) : (
-                      "Log Out"
-                    )}
-                  </Button>
-                </motion.div>
-              </>
-            ) : (
-              <>
-                {/* Sign In */}
+                    initial={{
+                      scaleX: 0,
+                      opacity: 0,
+                    }}
+                    whileHover={{
+                      scaleX: 1,
+                      opacity: 1,
+                    }}
+                    transition={{
+                      duration: 0.25,
+                      ease: "easeOut",
+                    }}
+                  />
+                </Link>
+              ))}
+            </motion.div>
 
-                <Link href="/auth/login">
+            {/* Divider */}
+
+            <motion.div
+              initial={{ opacity: 0, scaleY: 0 }}
+              animate={{ opacity: 1, scaleY: 1 }}
+              transition={{
+                duration: 0.5,
+                delay: 0.35,
+              }}
+              className="h-4 w-px bg-white/20"
+            />
+
+            {/* =================================================
+                AUTH
+            ================================================== */}
+
+            <motion.div
+              initial={{ opacity: 0, x: 15 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{
+                duration: 0.6,
+                delay: 0.3,
+                ease: "easeOut",
+              }}
+              className="flex items-center gap-4"
+            >
+              {isPending ? (
+                <motion.div
+                  animate={{
+                    opacity: [0.4, 0.8, 0.4],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                  className="h-8 w-24 rounded-lg bg-white/5"
+                />
+              ) : user ? (
+                <>
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="max-w-32 truncate text-sm font-medium text-gray-300"
+                  >
+                    Hi, {user.name || "User"}
+                  </motion.span>
+
                   <motion.div
                     whileHover={{
+                      scale: 1.03,
                       y: -1,
                     }}
                     whileTap={{
@@ -286,123 +240,163 @@ export default function Navbar() {
                   >
                     <Button
                       type="button"
-                      className="
-                        bg-transparent
-                        px-0
-                        text-sm
-                        font-medium
-                        text-gray-300
-                        transition-colors
-                        hover:bg-transparent
-                        hover:text-white
-                      "
-                    >
-                      Sign In
-                    </Button>
-                  </motion.div>
-                </Link>
-
-                {/* Get Started */}
-
-                <Link href="/auth/signup">
-                  <motion.div
-                    whileHover={{
-                      scale: 1.04,
-                      y: -2,
-                    }}
-                    whileTap={{
-                      scale: 0.96,
-                    }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 400,
-                      damping: 18,
-                    }}
-                  >
-                    <Button
-                      type="button"
+                      onPress={handleLogout}
+                      isDisabled={logoutLoading}
                       className="
                         rounded-xl
-                        bg-indigo-500
+                        border
+                        border-white/10
+                        bg-white/5
                         px-5
                         py-2
                         font-medium
-                        text-white
-                        shadow-md
+                        text-gray-300
                         transition-all
-                        hover:bg-indigo-400
-                        hover:shadow-[0_0_25px_rgba(99,102,241,0.3)]
+                        hover:bg-white/10
+                        hover:text-white
                       "
                     >
-                      Get Started
+                      {logoutLoading ? (
+                        <span className="flex items-center gap-2">
+                          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+                          Logging out...
+                        </span>
+                      ) : (
+                        "Log Out"
+                      )}
                     </Button>
                   </motion.div>
-                </Link>
-              </>
-            )}
-          </motion.div>
-        </div>
-
-        {/* =====================================================
-            MOBILE MENU BUTTON
-        ====================================================== */}
-
-        <motion.div
-          initial={{ opacity: 0, x: 10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{
-            duration: 0.5,
-            delay: 0.2,
-          }}
-          className="flex items-center md:hidden"
-        >
-          <motion.button
-            type="button"
-            onClick={() => setIsOpen((prev) => !prev)}
-            whileTap={{
-              scale: 0.88,
-            }}
-            whileHover={{
-              backgroundColor: "rgba(255,255,255,0.05)",
-            }}
-            className="rounded-lg p-1 text-gray-300 transition-colors hover:text-white focus:outline-none"
-            aria-label="Toggle Menu"
-            aria-expanded={isOpen}
-          >
-            <motion.svg
-              className="h-6 w-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              animate={{
-                rotate: isOpen ? 90 : 0,
-              }}
-              transition={{
-                duration: 0.25,
-                ease: "easeOut",
-              }}
-            >
-              {isOpen ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
+                </>
               ) : (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
+                <>
+                  <Link href="/auth/login">
+                    <motion.div
+                      whileHover={{
+                        y: -1,
+                      }}
+                      whileTap={{
+                        scale: 0.97,
+                      }}
+                    >
+                      <Button
+                        type="button"
+                        className="
+                          bg-transparent
+                          px-0
+                          text-sm
+                          font-medium
+                          text-gray-300
+                          transition-colors
+                          hover:bg-transparent
+                          hover:text-white
+                        "
+                      >
+                        Sign In
+                      </Button>
+                    </motion.div>
+                  </Link>
+
+                  <Link href="/auth/signup">
+                    <motion.div
+                      whileHover={{
+                        scale: 1.04,
+                        y: -2,
+                      }}
+                      whileTap={{
+                        scale: 0.96,
+                      }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 18,
+                      }}
+                    >
+                      <Button
+                        type="button"
+                        className="
+                          rounded-xl
+                          bg-indigo-500
+                          px-5
+                          py-2
+                          font-medium
+                          text-white
+                          shadow-md
+                          transition-all
+                          hover:bg-indigo-400
+                          hover:shadow-[0_0_25px_rgba(99,102,241,0.3)]
+                        "
+                      >
+                        Get Started
+                      </Button>
+                    </motion.div>
+                  </Link>
+                </>
               )}
-            </motion.svg>
-          </motion.button>
-        </motion.div>
+            </motion.div>
+          </div>
+
+          {/* =====================================================
+              MOBILE MENU BUTTON
+          ====================================================== */}
+
+          <motion.div
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{
+              duration: 0.5,
+              delay: 0.2,
+            }}
+            className="flex items-center md:hidden"
+          >
+            <motion.button
+              type="button"
+              onClick={() => setIsOpen((prev) => !prev)}
+              whileTap={{
+                scale: 0.88,
+              }}
+              whileHover={{
+                backgroundColor: "rgba(255,255,255,0.05)",
+              }}
+              className="rounded-lg p-1 text-gray-300 transition-colors hover:text-white focus:outline-none"
+              aria-label="Toggle Menu"
+              aria-expanded={isOpen}
+            >
+              <motion.svg
+                className="h-6 w-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                animate={{
+                  rotate: isOpen ? 90 : 0,
+                }}
+                transition={{
+                  duration: 0.25,
+                  ease: "easeOut",
+                }}
+              >
+                {isOpen ? (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                ) : (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                )}
+              </motion.svg>
+            </motion.button>
+          </motion.div>
+        </motion.nav>
 
         {/* =====================================================
             MOBILE MENU
+            IMPORTANT: OUTSIDE motion.nav
         ====================================================== */}
 
         <AnimatePresence>
@@ -410,21 +404,21 @@ export default function Navbar() {
             <motion.div
               initial={{
                 opacity: 0,
-                height: 0,
                 y: -10,
+                scale: 0.98,
               }}
               animate={{
                 opacity: 1,
-                height: "auto",
                 y: 0,
+                scale: 1,
               }}
               exit={{
                 opacity: 0,
-                height: 0,
                 y: -10,
+                scale: 0.98,
               }}
               transition={{
-                duration: 0.3,
+                duration: 0.25,
                 ease: [0.22, 1, 0.36, 1],
               }}
               className="
@@ -432,14 +426,14 @@ export default function Navbar() {
                 left-0
                 right-0
                 top-full
-                z-50
+                z-999
                 mt-2
-                overflow-hidden
                 rounded-2xl
                 border
                 border-white/10
                 bg-[#1c1c1e]
-                shadow-xl
+                p-6
+                shadow-2xl
                 md:hidden
               "
             >
@@ -455,7 +449,7 @@ export default function Navbar() {
                     },
                   },
                 }}
-                className="flex flex-col gap-4 p-6"
+                className="flex flex-col gap-4"
               >
                 {/* Navigation */}
 
@@ -616,7 +610,7 @@ export default function Navbar() {
                       <Link
                         href="/auth/login"
                         onClick={() => setIsOpen(false)}
-                        className="w-full"
+                        className="block w-full"
                       >
                         <Button
                           type="button"
@@ -663,7 +657,7 @@ export default function Navbar() {
                       <Link
                         href="/auth/signup"
                         onClick={() => setIsOpen(false)}
-                        className="w-full"
+                        className="block w-full"
                       >
                         <Button
                           type="button"
@@ -689,7 +683,7 @@ export default function Navbar() {
             </motion.div>
           )}
         </AnimatePresence>
-      </motion.nav>
+      </div>
     </div>
   );
 }
