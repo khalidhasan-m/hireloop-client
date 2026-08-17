@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button } from "@heroui/react";
+import { Button, Label, Radio, RadioGroup } from "@heroui/react";
 import { authClient } from "@/lib/auth-client";
 import toast from "react-hot-toast";
 import {
@@ -24,6 +24,7 @@ export default function SignUpPage() {
     email: "",
     password: "",
     confirmPassword: "",
+    role: "seeker",
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -99,6 +100,7 @@ export default function SignUpPage() {
     formData.email.trim() &&
     isPasswordValid &&
     isPasswordMatched &&
+    formData.role &&
     agreeTerms &&
     !loading;
 
@@ -135,6 +137,13 @@ export default function SignUpPage() {
       return;
     }
 
+    if (!formData.role) {
+      const message = "Please select your account type.";
+      setError(message);
+      toast.error(message);
+      return;
+    }
+
     if (!agreeTerms) {
       const message = "Please agree to the Terms and Privacy Policy.";
       setError(message);
@@ -149,6 +158,7 @@ export default function SignUpPage() {
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
+        role: formData.role,
         callbackURL: "/",
       });
 
@@ -532,6 +542,47 @@ export default function SignUpPage() {
                     Passwords match.
                   </p>
                 )}
+              </div>
+
+              {/* =================================================
+                  ACCOUNT TYPE
+              ================================================== */}
+
+              <div className="flex flex-col gap-3">
+                <Label className="text-xs font-medium text-gray-300">
+                  Account type
+                </Label>
+
+                <RadioGroup
+                  value={formData.role}
+                  onChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      role: value,
+                    }))
+                  }
+                  name="role"
+                  orientation="horizontal"
+                  isDisabled={loading}
+                >
+                  <Radio value="seeker">
+                    <Radio.Content>
+                      <Radio.Control>
+                        <Radio.Indicator />
+                      </Radio.Control>
+                      Job Seeker
+                    </Radio.Content>
+                  </Radio>
+
+                  <Radio value="recruiter">
+                    <Radio.Content>
+                      <Radio.Control>
+                        <Radio.Indicator />
+                      </Radio.Control>
+                      Recruiter
+                    </Radio.Content>
+                  </Radio>
+                </RadioGroup>
               </div>
 
               {/* Terms */}
