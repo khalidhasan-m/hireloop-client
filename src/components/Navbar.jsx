@@ -58,6 +58,13 @@ export default function Navbar() {
     },
   ];
 
+  const dashboardLink =
+    user?.role === "recruiter"
+      ? "/dashboard/recruiter"
+      : user?.role === "seeker"
+        ? "/dashboard/seeker"
+        : null;
+
   return (
     <div className="relative z-100 flex w-full justify-center bg-[#030305] px-4 pt-4">
       <div className="relative w-full max-w-6xl">
@@ -221,6 +228,39 @@ export default function Navbar() {
                 />
               ) : user ? (
                 <>
+                  {/* Dashboard */}
+
+                  {dashboardLink && (
+                    <Link href={dashboardLink}>
+                      <motion.div
+                        whileHover={{
+                          y: -1,
+                        }}
+                        whileTap={{
+                          scale: 0.97,
+                        }}
+                      >
+                        <Button
+                          type="button"
+                          className="
+                            bg-transparent
+                            px-0
+                            text-sm
+                            font-medium
+                            text-gray-300
+                            transition-colors
+                            hover:bg-transparent
+                            hover:text-white
+                          "
+                        >
+                          Dashboard
+                        </Button>
+                      </motion.div>
+                    </Link>
+                  )}
+
+                  {/* User Name */}
+
                   <motion.span
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -228,6 +268,8 @@ export default function Navbar() {
                   >
                     Hi, {user.name || "User"}
                   </motion.span>
+
+                  {/* Logout */}
 
                   <motion.div
                     whileHover={{
@@ -269,6 +311,8 @@ export default function Navbar() {
                 </>
               ) : (
                 <>
+                  {/* Sign In */}
+
                   <Link href="/auth/login">
                     <motion.div
                       whileHover={{
@@ -295,6 +339,8 @@ export default function Navbar() {
                       </Button>
                     </motion.div>
                   </Link>
+
+                  {/* Get Started */}
 
                   <Link href="/auth/signup">
                     <motion.div
@@ -360,6 +406,7 @@ export default function Navbar() {
               className="rounded-lg p-1 text-gray-300 transition-colors hover:text-white focus:outline-none"
               aria-label="Toggle Menu"
               aria-expanded={isOpen}
+              aria-controls="mobile-navigation"
             >
               <motion.svg
                 className="h-6 w-6"
@@ -396,12 +443,12 @@ export default function Navbar() {
 
         {/* =====================================================
             MOBILE MENU
-            IMPORTANT: OUTSIDE motion.nav
         ====================================================== */}
 
         <AnimatePresence>
           {isOpen && (
             <motion.div
+              id="mobile-navigation"
               initial={{
                 opacity: 0,
                 y: -10,
@@ -523,6 +570,39 @@ export default function Navbar() {
                   />
                 ) : user ? (
                   <>
+                    {/* Dashboard */}
+
+                    {dashboardLink && (
+                      <motion.div
+                        variants={{
+                          hidden: {
+                            opacity: 0,
+                            y: 10,
+                          },
+                          visible: {
+                            opacity: 1,
+                            y: 0,
+                          },
+                        }}
+                      >
+                        <Link
+                          href={dashboardLink}
+                          onClick={() => setIsOpen(false)}
+                          className="
+                            block
+                            py-1
+                            text-sm
+                            font-medium
+                            text-gray-300
+                            transition-colors
+                            hover:text-white
+                          "
+                        >
+                          Dashboard
+                        </Link>
+                      </motion.div>
+                    )}
+
                     {/* User Name */}
 
                     <motion.div
@@ -543,6 +623,12 @@ export default function Navbar() {
                       <p className="mt-1 truncate text-sm font-medium text-white">
                         {user.name || "User"}
                       </p>
+
+                      {user.role && (
+                        <p className="mt-1 text-[10px] capitalize text-gray-500">
+                          {user.role}
+                        </p>
+                      )}
                     </motion.div>
 
                     {/* Mobile Logout */}

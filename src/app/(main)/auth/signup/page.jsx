@@ -554,6 +554,7 @@ export default function SignUpPage() {
                 </Label>
 
                 <RadioGroup
+                  aria-label="Account type"
                   value={formData.role}
                   onChange={(value) =>
                     setFormData((prev) => ({

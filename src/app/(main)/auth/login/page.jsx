@@ -75,7 +75,7 @@ export default function LoginPage() {
         email,
         password,
         rememberMe,
-        callbackURL: "/",
+        callbackURL: "/", // We override routing behavior via session detection after response
       });
 
       if (signInError) {
@@ -91,7 +91,17 @@ export default function LoginPage() {
       if (data) {
         toast.success("Welcome back to HireLoop!");
 
-        router.push("/");
+        // Fetch session or read user role to handle role-aware redirection
+        const sessionRes = await authClient.getSession();
+        const userRole = sessionRes?.data?.user?.role;
+
+        if (userRole === "recruiter") {
+          router.push("/dashboard/recruiter");
+        } else {
+          // Default fallback to seeker dashboard
+          router.push("/dashboard/seeker");
+        }
+
         router.refresh();
       }
     } catch (err) {
