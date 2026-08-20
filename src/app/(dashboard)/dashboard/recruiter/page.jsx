@@ -7,11 +7,12 @@ import {
   HiUsers,
   HiBolt,
   HiCheckCircle,
-  HiPlus, // Added plus icon
+  HiPlus,
 } from "react-icons/hi2";
 import { StatsGrid } from "./_components/StatsGrid";
 import { RecentApplicationsTable } from "./_components/RecentApplicationsTable";
 import { TopCompaniesCard } from "./_components/TopCompaniesCard";
+import { CreateJobModal } from "./jobs/_components/CreateJobModal";
 import { useRouter } from "next/navigation";
 
 export default function RecruiterDashboardPage() {
@@ -20,7 +21,7 @@ export default function RecruiterDashboardPage() {
   const user = session?.user;
   const userName = user?.name || "Alex Sterling";
 
-  // State for optional quick modal if you want to pop up a form
+  // State to control the Create Job modal visibility
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const stats = [
@@ -86,11 +87,28 @@ export default function RecruiterDashboardPage() {
   ];
 
   const topCompanies = [
-    { name: "Google Inc.", category: "Technology • Mountain View", jobs: "24 ACTIVE JOBS" },
-    { name: "Meta Platforms", category: "Social Media • Mountain View", jobs: "18 ACTIVE JOBS" },
-    { name: "Stripe", category: "Fintech • San Francisco", jobs: "12 ACTIVE JOBS" },
+    {
+      name: "Google Inc.",
+      category: "Technology • Mountain View",
+      jobs: "24 ACTIVE JOBS",
+    },
+    {
+      name: "Meta Platforms",
+      category: "Social Media • Mountain View",
+      jobs: "18 ACTIVE JOBS",
+    },
+    {
+      name: "Stripe",
+      category: "Fintech • San Francisco",
+      jobs: "12 ACTIVE JOBS",
+    },
     { name: "Tesla", category: "Automotive • Austin", jobs: "31 ACTIVE JOBS" },
   ];
+
+  const handleCreateJobSubmit = (jobData) => {
+    console.log("New Job Created from Dashboard:", jobData);
+    setIsModalOpen(false);
+  };
 
   return (
     <div className="space-y-8 relative pb-16">
@@ -100,7 +118,8 @@ export default function RecruiterDashboardPage() {
           Welcome back, {userName}
         </h1>
         <p className="mt-1 text-xs sm:text-sm text-gray-400">
-          Here is what&apos;s happening with your job listings and applicants today.
+          Here is what&apos;s happening with your job listings and applicants
+          today.
         </p>
       </div>
 
@@ -114,16 +133,12 @@ export default function RecruiterDashboardPage() {
       </div>
 
       {/* =====================================================
-          FLOATING ACTION BUTTON (MATCHING SCREENSHOT)
+          FLOATING ACTION BUTTON (OPENS CREATE JOB MODAL)
       ====================================================== */}
       <div className="fixed bottom-8 right-8 z-40">
         <button
-          onClick={() => {
-            // You can either open a modal or route to a create job page
-            // Example: router.push('/dashboard/recruiter/jobs/new')
-            setIsModalOpen(true);
-          }}
-          className="w-14 h-14 rounded-full bg-white text-black flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-all duration-200 border border-white/20"
+          onClick={() => setIsModalOpen(true)}
+          className="w-14 h-14 rounded-full bg-white text-black flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-all duration-200 border border-white/20 cursor-pointer"
           title="Post a new job"
         >
           <HiPlus className="text-2xl font-bold" />
@@ -131,36 +146,13 @@ export default function RecruiterDashboardPage() {
       </div>
 
       {/* =====================================================
-          OPTIONAL QUICK MODAL 
+          CREATE JOB MODAL COMPONENT
       ====================================================== */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-[#0b0b0f] border border-white/10 rounded-2xl w-full max-w-md p-6 relative shadow-2xl">
-            <h3 className="text-lg font-bold text-white mb-2">Quick Action</h3>
-            <p className="text-xs text-gray-400 mb-6">
-              What would you like to do today?
-            </p>
-            
-            <div className="space-y-3">
-              <button 
-                onClick={() => {
-                  setIsModalOpen(false);
-                  router.push("/dashboard/recruiter/jobs"); // or post job page
-                }}
-                className="w-full py-3 px-4 rounded-xl bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-500 transition"
-              >
-                Create a New Job Listing
-              </button>
-              <button 
-                onClick={() => setIsModalOpen(false)}
-                className="w-full py-3 px-4 rounded-xl bg-white/5 text-gray-300 text-xs font-semibold hover:bg-white/10 transition border border-white/10"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <CreateJobModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleCreateJobSubmit}
+      />
     </div>
   );
 }

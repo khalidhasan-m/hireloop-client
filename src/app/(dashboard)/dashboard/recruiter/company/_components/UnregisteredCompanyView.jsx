@@ -1,8 +1,6 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
-import Link from "next/link";
 import { HiBuildingStorefront, HiQuestionMarkCircle } from "react-icons/hi2";
 
 export function UnregisteredCompanyView({ onRegisterClick }) {
@@ -10,7 +8,7 @@ export function UnregisteredCompanyView({ onRegisterClick }) {
     <div className="flex flex-col items-center justify-center min-h-[70vh] text-center p-6 border border-dashed border-white/10 rounded-3xl bg-[#0b0b0f]/50 backdrop-blur-xl my-4">
       {/* Graphic Icon Area */}
       <div className="relative mb-6">
-        <div className="w-28 h-28 rounded-3xl bg-linear-to-b from-white/10 to-white/[0.02] border border-white/10 flex items-center justify-center shadow-2xl relative overflow-hidden">
+        <div className="w-28 h-28 rounded-3xl bg-linear-to-b from-white/10 to-white/2 border border-white/10 flex items-center justify-center shadow-2xl relative overflow-hidden">
           <div className="w-16 h-12 border-2 border-dashed border-gray-600 rounded-lg flex flex-col justify-between p-1.5 opacity-50">
             <div className="w-1/2 h-1.5 bg-gray-600 rounded" />
             <div className="w-full h-1 bg-gray-700 rounded" />
@@ -36,11 +34,11 @@ export function UnregisteredCompanyView({ onRegisterClick }) {
       <div className="flex flex-col sm:flex-row items-center gap-4">
         <button
           onClick={onRegisterClick}
-          className="w-full sm:w-auto px-6 py-3 rounded-xl bg-white text-black text-xs font-bold hover:bg-gray-200 transition shadow-lg"
+          className="w-full sm:w-auto px-6 py-3 rounded-xl bg-white text-black text-xs font-bold hover:bg-gray-200 transition shadow-lg cursor-pointer"
         >
           Register your company
         </button>
-        <button className="w-full sm:w-auto px-6 py-3 rounded-xl bg-white/5 text-gray-300 text-xs font-medium border border-white/10 hover:bg-white/10 transition flex items-center justify-center gap-2">
+        <button className="w-full sm:w-auto px-6 py-3 rounded-xl bg-white/5 text-gray-300 text-xs font-medium border border-white/10 hover:bg-white/10 transition flex items-center justify-center gap-2 cursor-pointer">
           <HiQuestionMarkCircle className="text-base" />
           View FAQ
         </button>

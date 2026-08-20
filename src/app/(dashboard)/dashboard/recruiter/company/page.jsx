@@ -3,10 +3,11 @@
 import React, { useState } from "react";
 import { UnregisteredCompanyView } from "./_components/UnregisteredCompanyView";
 import { RegisteredCompanyView } from "./_components/RegisteredCompanyView";
+import { RegisterCompanyModal } from "./_components/RegisterCompanyModal"; // Import your modal
 
 export default function RecruiterCompanyPage() {
-  // Toggle this to test both states (Registered vs Unregistered)
-  const [isRegistered, setIsRegistered] = useState(true);
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
 
   // Mock data (replace with API/Database data later)
   const companyData = {
@@ -16,8 +17,15 @@ export default function RecruiterCompanyPage() {
     about:
       "Founded in 2014, LuminaTech Systems has emerged as a global leader in high-performance cloud infrastructure and decentralized computing systems.",
     websiteUrl: "https://example.com",
-    logoUrl: "", // Leaving empty automatically triggers demo fallbacks!
+    logoUrl: "", 
     bannerUrl: "",
+  };
+
+  const handleRegisterSubmit = (formData) => {
+    console.log("Submitted Company Data:", formData);
+    // TODO: Send data to your database / API here
+    setIsRegistered(true); // Switch view to registered state after successful submission
+    setIsModalOpen(false); // Close the modal
   };
 
   return (
@@ -31,7 +39,7 @@ export default function RecruiterCompanyPage() {
         {/* Demo Toggle Button (For Testing UI States) */}
         <button
           onClick={() => setIsRegistered(!isRegistered)}
-          className="text-[10px] font-mono px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 text-gray-400 hover:text-white transition"
+          className="text-[10px] font-mono px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 text-gray-400 hover:text-white transition cursor-pointer"
         >
           Toggle Demo State ({isRegistered ? "Registered" : "Unregistered"})
         </button>
@@ -42,9 +50,16 @@ export default function RecruiterCompanyPage() {
         <RegisteredCompanyView companyData={companyData} />
       ) : (
         <UnregisteredCompanyView
-          onRegisterClick={() => setIsRegistered(true)}
+          onRegisterClick={() => setIsModalOpen(true)} // Opens the modal when clicked!
         />
       )}
+
+      {/* Registration Modal Component */}
+      <RegisterCompanyModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleRegisterSubmit}
+      />
     </div>
   );
 }

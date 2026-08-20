@@ -42,7 +42,7 @@ export function ActiveRolesSidebar({ roles }) {
           {activeRoles.map((role, idx) => (
             <div
               key={idx}
-              className="p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition space-y-3"
+              className="p-4 rounded-xl border border-white/5 bg-white/2 hover:bg-white/5 transition space-y-3"
             >
               <div className="flex items-start justify-between gap-2">
                 <h4 className="text-xs font-semibold text-white leading-snug">

@@ -38,7 +38,7 @@ export function RegisteredCompanyView({ companyData }) {
             priority
             className="object-cover opacity-60 mix-blend-screen"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0b0b0f] via-[#0b0b0f]/40 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-[#0b0b0f] via-[#0b0b0f]/40 to-transparent" />
         </div>
 
         {/* Company Header Info Overlay */}

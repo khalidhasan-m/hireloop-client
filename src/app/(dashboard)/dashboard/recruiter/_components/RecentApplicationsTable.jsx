@@ -27,7 +27,7 @@ export function RecentApplicationsTable({ applications }) {
           </thead>
           <tbody className="divide-y divide-white/5 text-xs">
             {applications.map((app, idx) => (
-              <tr key={idx} className="group hover:bg-white/[0.02] transition">
+              <tr key={idx} className="group hover:bg-white/2 transition">
                 <td className="py-4 pr-4 font-medium text-white flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-linear-to-tr from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-xs text-white shrink-0">
                     {app.name.charAt(0)}
