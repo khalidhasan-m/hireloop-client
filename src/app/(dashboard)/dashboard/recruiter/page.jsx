@@ -16,6 +16,10 @@ import { CreateJobModal } from "./jobs/_components/CreateJobModal";
 import { useRouter } from "next/navigation";
 
 export default function RecruiterDashboardPage() {
+  // --- TEMPORARY TEST FOR ERROR BOUNDARY ---
+  // throw new Error("Intentional test runtime error!");
+  // ----------------------------------------
+
   const router = useRouter();
   const { data: session } = authClient.useSession();
   const user = session?.user;
