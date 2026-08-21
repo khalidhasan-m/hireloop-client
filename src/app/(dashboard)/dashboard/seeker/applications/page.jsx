@@ -82,6 +82,11 @@ export default function MyApplicationsPage() {
           (applications.filter((a) => a.status === "Offered").length / totalApplied) * 100,
         )
       : 0;
+  const exportApplications = () => {
+    const csv = ["jobId,candidateEmail,status,createdAt,coverLetter", ...applications.map((app) => [app.jobId, app.candidateEmail, app.status, app.createdAt, app.coverLetter].map((value) => `"${String(value || "").replaceAll('"', '""')}"`).join(","))].join("\\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    const link = document.createElement("a"); link.href = url; link.download = "hireloop-applications.csv"; link.click(); URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="space-y-6 pb-12">
@@ -117,9 +122,9 @@ export default function MyApplicationsPage() {
               Archived
             </button>
           </div>
-          <button className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-white/10 bg-white text-black text-xs font-bold hover:bg-gray-200 transition cursor-pointer">
+          <button type="button" onClick={exportApplications} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-white/10 bg-white text-black text-xs font-bold hover:bg-gray-200 transition cursor-pointer">
             <HiArrowDownTray className="text-sm" />
-            Export PDF
+            Export CSV
           </button>
         </div>
       </div>

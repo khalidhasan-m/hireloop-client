@@ -12,6 +12,7 @@ export const api = {
   updateProfile: (data, token) => apiRequest("PATCH", "/profile/me", data, token),
   uploadFile: async (path, file, token) => { const form = new FormData(); form.append("file", file); const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5050/api"}${path}`, { method: "POST", headers: { Authorization: `Bearer ${token}` }, credentials: "include", body: form }); const json = await response.json(); if (!response.ok) throw new Error(json.message || "Upload failed"); return json; },
   uploadResume: (file, token) => api.uploadFile("/uploads/resume", file, token),
+  uploadCoverLetter: (file, token) => api.uploadFile("/uploads/cover-letter", file, token),
   uploadAvatar: (file, token) => api.uploadFile("/uploads/avatar", file, token),
   uploadCompanyLogo: (id, file, token) => api.uploadFile(`/uploads/company-logo/${id}`, file, token),
   getNotifications: (token) => apiRequest("GET", "/notifications", null, token),

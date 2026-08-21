@@ -8,8 +8,7 @@ import { HiCheck, HiShieldCheck, HiArrowRight } from "react-icons/hi2";
 
 function SuccessContent() {
   const searchParams = useSearchParams();
-  const sessionId =
-    searchParams.get("session_id") || "cs_test_a1b4e3j70J810x80...";
+  const sessionId = searchParams.get("session_id");
 
   return (
     <div className="relative min-h-[calc(100vh-80px)] flex items-center justify-center px-4">
@@ -38,9 +37,7 @@ function SuccessContent() {
             Welcome to Hireloop Pro
           </h1>
           <p className="text-xs sm:text-sm text-gray-400 font-medium">
-            Your payment of{" "}
-            <span className="text-white font-semibold">$20.00</span> was
-            received perfectly.
+            Your Stripe checkout was completed successfully. Your subscription status will update from the verified webhook event.
           </p>
         </div>
 
@@ -58,14 +55,14 @@ function SuccessContent() {
             <span className="font-medium">Session ID verified</span>
           </div>
           <span className="font-mono text-[11px] text-gray-500 truncate max-w-40">
-            {sessionId}
+            {sessionId || "Awaiting Stripe session verification"}
           </span>
         </div>
 
         {/* Action Button */}
         <div className="pt-2">
           <Link
-            href="#"
+            href="/dashboard"
             className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-white text-black text-xs font-semibold hover:bg-gray-200 transition shadow-[0_10px_30px_rgba(255,255,255,0.15)] cursor-pointer"
           >
             <span>Go to Workspace Dashboard</span>
