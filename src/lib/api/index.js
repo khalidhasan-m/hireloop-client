@@ -6,7 +6,7 @@ export const api = {
   getMyCompany: (token) => apiRequest("GET", "/companies/my", null, token),
   updateMyCompany: (id, data, token) =>
     apiRequest("PATCH", `/companies/${id}`, data, token),
-  getCompanies: (industry) => apiRequest("GET", `/companies${industry && industry !== "all" ? `?industry=${encodeURIComponent(industry)}` : ""}`),
+  getCompanies: (industry = "all", page = 1, limit = 6) => { const params = new URLSearchParams({ page: String(page), limit: String(limit) }); if (industry && industry !== "all") params.set("industry", industry); return apiRequest("GET", `/companies?${params.toString()}`); },
   getCompanyById: (id) => apiRequest("GET", `/companies/${id}`),
   getProfile: (token) => apiRequest("GET", "/profile/me", null, token),
   updateProfile: (data, token) => apiRequest("PATCH", "/profile/me", data, token),
