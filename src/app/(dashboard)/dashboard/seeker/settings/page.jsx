@@ -19,6 +19,9 @@ export default function SeekerSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [resumeName, setResumeName] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [passwordData, setPasswordData] = useState({ currentPassword: "", newPassword: "" });
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState("");
 
   useEffect(() => {
     if (user) {
@@ -27,6 +30,7 @@ export default function SeekerSettingsPage() {
       setHeadline(user.headline || "");
       setBio(user.bio || "");
       setSkills(Array.isArray(user.skills) ? user.skills : []);
+      setAvatarUrl(user.image || "");
       if (user.resumeUrl) {
         setResumeName(user.resumeUrl.split("/").pop() || "Resume.pdf");
       }
@@ -44,8 +48,22 @@ export default function SeekerSettingsPage() {
     setSkills((prev) => prev.filter((x) => x !== skill));
   };
 
-  const upload = async (kind, file) => { if (!file) return; setUploading(true); try { const { data } = await authClient.getSession(); const result = kind === "resume" ? await api.uploadResume(file, data?.session?.token) : await api.uploadAvatar(file, data?.session?.token); if (kind === "resume") setResumeName(file.name); toast.success(`${kind === "resume" ? "Resume" : "Avatar"} uploaded`); } catch (error) { toast.error(error.message || "Upload failed"); } finally { setUploading(false); } };
+  const upload = async (kind, file) => { if (!file) return; setUploading(true); try { const { data } = await authClient.getSession(); const result = kind === "resume" ? await api.uploadResume(file, data?.session?.token) : await api.uploadAvatar(file, data?.session?.token); if (kind === "resume") setResumeName(file.name); else if (result?.data?.url) setAvatarUrl(result.data.url); toast.success(`${kind === "resume" ? "Resume" : "Avatar"} uploaded`); } catch (error) { toast.error(error.message || "Upload failed"); } finally { setUploading(false); } };
   const handleSaveDetails = async () => { setSaving(true); try { const { data } = await authClient.getSession(); const result = await api.updateProfile({ headline, bio, skills }, data?.session?.token); if (result?.data) toast.success("Professional details saved"); } catch (error) { toast.error(error.message || "Failed to save details"); } finally { setSaving(false); } };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    if (!passwordData.currentPassword || !passwordData.newPassword) return toast.error("Enter your current and new password");
+    if (passwordData.newPassword.length < 8) return toast.error("New password must be at least 8 characters");
+    setPasswordSaving(true);
+    try {
+      const { error } = await authClient.changePassword(passwordData);
+      if (error) throw new Error(error.message);
+      setPasswordData({ currentPassword: "", newPassword: "" });
+      toast.success("Password updated successfully");
+    } catch (error) { toast.error(error.message || "Failed to change password"); }
+    finally { setPasswordSaving(false); }
+  };
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
@@ -85,9 +103,9 @@ export default function SeekerSettingsPage() {
 
           <div className="flex items-center gap-4 mb-6">
             <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-xl font-bold text-white overflow-hidden">
-              {user?.image ? (
+              {avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={user.image} alt="" className="w-full h-full object-cover" />
+                <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
               ) : (
                 <HiUser className="text-2xl" />
               )}
@@ -117,8 +135,13 @@ export default function SeekerSettingsPage() {
                 className="px-5 py-2.5 rounded-xl bg-white text-black text-xs font-bold hover:bg-gray-200 transition disabled:opacity-50 cursor-pointer">
                 {saving ? "Saving..." : "Update Profile"}
               </button>
-              <button type="button" onClick={() => toast("Use the password reset email flow from the login screen.")} className="px-5 py-2.5 rounded-xl border border-white/10 bg-white/5 text-xs font-medium text-gray-300 hover:bg-white/10 transition cursor-pointer">Reset Password</button>
+              <button type="button" onClick={() => document.getElementById("seeker-password-form")?.scrollIntoView({ behavior: "smooth", block: "center" })} className="px-5 py-2.5 rounded-xl border border-white/10 bg-white/5 text-xs font-medium text-gray-300 hover:bg-white/10 transition cursor-pointer">Change Password</button>
             </div>
+          </form>
+          <form id="seeker-password-form" onSubmit={handleChangePassword} className="mt-6 border-t border-white/10 pt-5 space-y-4">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-300">Security</h4>
+            <div className="grid gap-4 sm:grid-cols-2"><input type="password" autoComplete="current-password" placeholder="Current password" value={passwordData.currentPassword} onChange={(event) => setPasswordData((value) => ({ ...value, currentPassword: event.target.value }))} className="h-10 rounded-xl border border-white/10 bg-[#08080c] px-3 text-xs text-white outline-none focus:border-indigo-500" /><input type="password" autoComplete="new-password" placeholder="New password (8+ characters)" value={passwordData.newPassword} onChange={(event) => setPasswordData((value) => ({ ...value, newPassword: event.target.value }))} className="h-10 rounded-xl border border-white/10 bg-[#08080c] px-3 text-xs text-white outline-none focus:border-indigo-500" /></div>
+            <button type="submit" disabled={passwordSaving} className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-gray-300 hover:bg-white/10 disabled:opacity-50">{passwordSaving ? "Updating…" : "Update Password"}</button>
           </form>
         </div>
 

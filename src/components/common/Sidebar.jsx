@@ -60,6 +60,8 @@ const ROLE_COLORS = {
   admin: "text-amber-400 bg-amber-500/10 border-amber-500/20",
 };
 
+const PLAN_LABELS = { FREE: "Free Account", PRO: "Professional Plan", PREMIUM: "Premium Plan", GROWTH: "Growth Plan", ENTERPRISE: "Enterprise Plan" };
+
 export default function Sidebar({
   user,
   isPending,
@@ -72,6 +74,8 @@ export default function Sidebar({
   const links = NAV_LINKS[role] || NAV_LINKS.seeker;
   const roleLabel = ROLE_LABELS[role] || "User";
   const roleColor = ROLE_COLORS[role] || ROLE_COLORS.seeker;
+  const plan = String(user?.plan || "FREE").toUpperCase();
+  const planLabel = role === "admin" ? "System Administrator" : PLAN_LABELS[plan] || `${plan} Plan`;
 
   const isActive = (href) => {
     if (href === `/dashboard/${role}`) {
@@ -140,16 +144,13 @@ export default function Sidebar({
         )}
       </div>
 
-      {/* Role badge */}
-      <div className="mx-3 mt-3 px-3 py-1.5 rounded-lg bg-white/3 border border-white/10 flex items-center justify-between">
-        <span className="text-[10px] font-bold tracking-widest uppercase text-gray-400">
-          Role
-        </span>
-        <span
-          className={`text-[9px] font-bold tracking-wider uppercase px-2 py-0.5 rounded border ${roleColor}`}
-        >
-          {roleLabel}
-        </span>
+      {/* Role and account status */}
+      <div className="mx-3 mt-3 rounded-lg border border-white/10 bg-white/3 px-3 py-2">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Role</span>
+          <span className={`rounded border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${roleColor}`}>{roleLabel}</span>
+        </div>
+        <p className="mt-1 truncate text-[10px] font-medium text-gray-300">{planLabel}</p>
       </div>
 
       {/* Navigation */}

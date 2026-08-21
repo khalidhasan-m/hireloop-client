@@ -59,11 +59,13 @@ export default function Navbar() {
   ];
 
   const dashboardLink =
-    user?.role === "recruiter"
-      ? "/dashboard/recruiter"
-      : user?.role === "seeker"
-        ? "/dashboard/seeker"
-        : null;
+    user?.role === "admin"
+      ? "/dashboard/admin"
+      : user?.role === "recruiter"
+        ? "/dashboard/recruiter"
+        : user?.role === "seeker"
+          ? "/dashboard/seeker"
+          : null;
 
   return (
     <div className="relative z-100 flex w-full justify-center bg-[#030305] px-4 pt-4">

@@ -1,15 +1,21 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@heroui/react";
 import { motion } from "motion/react";
 
 export default function Hero() {
+  const router = useRouter();
   const [keyword, setKeyword] = useState("");
   const [location, setLocation] = useState("");
 
   const handleSearch = (e) => {
     e.preventDefault();
+    const params = new URLSearchParams();
+    if (keyword.trim()) params.set("q", keyword.trim());
+    if (location.trim()) params.set("location", location.trim());
+    router.push(`/jobs${params.toString() ? `?${params.toString()}` : ""}`);
   };
 
   const stats = [
