@@ -141,6 +141,7 @@ export default function RecruiterApplicationsPage() {
         <div className="flex items-center gap-2">
           <HiFunnel className="text-gray-500 text-sm" />
           <select
+            aria-label="Filter applications by status"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             className="h-10 px-3 rounded-xl bg-[#0b0b0f] border border-white/10 text-xs text-white focus:outline-none"
@@ -186,6 +187,7 @@ export default function RecruiterApplicationsPage() {
                       </td>
                       <td className="py-4 px-5 text-right">
                         <select
+                          aria-label={`Update status for ${app.candidateName || "candidate"}`}
                           value={status}
                           disabled={updatingId === app._id}
                           onChange={(e) => handleStatusChange(app._id, e.target.value)}

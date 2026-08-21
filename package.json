@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:e2e": "playwright test",
+    "test:visual": "playwright test tests/e2e/dashboard-regression.spec.js --project=desktop --grep \"sidebar visual regression\"",
+    "test:a11y": "playwright test tests/e2e/dashboard-regression.spec.js --grep \"accessibility checks\"",
+    "test:performance": "playwright test tests/e2e/dashboard-regression.spec.js --grep \"performance budgets\""
   },
   "dependencies": {
     "@better-auth/mongo-adapter": "^1.6.29",
@@ -23,7 +27,9 @@
     "react-icons": "^5.7.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
+    "axe-core": "^4.13.0",
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.3.1",

@@ -312,6 +312,7 @@ export default function Hero() {
             <Button
               type="submit"
               isIconOnly
+              aria-label="Search jobs"
               className="h-9 w-9 min-w-9 rounded-lg bg-indigo-500 text-white transition hover:bg-indigo-400"
             >
               <svg

@@ -74,7 +74,7 @@ export default function AdminCompaniesPage() {
     </div>
 
     <div className="flex flex-wrap items-center justify-end gap-3">
-      <label className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-[#151519] px-3 py-2 text-xs text-gray-300"><HiFunnel className="text-gray-500" /><select value={status} onChange={(event) => selectStatus(event.target.value)} className="bg-transparent outline-none"><option value="all">All Statuses</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></label>
+      <label className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-[#151519] px-3 py-2 text-xs text-gray-300"><HiFunnel className="text-gray-500" /><select aria-label="Filter companies by status" value={status} onChange={(event) => selectStatus(event.target.value)} className="bg-transparent outline-none"><option value="all">All Statuses</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></label>
     </div>
 
     <section className="overflow-hidden rounded-xl border border-white/10 bg-[#171719]">

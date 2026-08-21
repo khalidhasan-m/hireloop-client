@@ -44,7 +44,7 @@ export default function DashboardLayout({ children }) {
       />
 
       {/* Main content area */}
-      <div className={`flex-1 flex flex-col min-h-screen ${isAdmin ? "lg:pl-40" : "lg:pl-56"}`}>
+      <div className={`min-w-0 flex-1 flex flex-col min-h-screen ${isAdmin ? "lg:pl-40" : "lg:pl-56"}`}>
         <DashboardHeader
           user={user}
           setMobileSidebarOpen={setMobileSidebarOpen}
