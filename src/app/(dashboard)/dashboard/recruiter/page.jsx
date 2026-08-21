@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import { apiRequest } from "@/lib/api/client";
 import {
   HiDocumentText,
   HiUsers,
@@ -16,10 +17,6 @@ import { CreateJobModal } from "./jobs/_components/CreateJobModal";
 import { useRouter } from "next/navigation";
 
 export default function RecruiterDashboardPage() {
-  // --- TEMPORARY TEST FOR ERROR BOUNDARY ---
-  // throw new Error("Intentional test runtime error!");
-  // ----------------------------------------
-
   const router = useRouter();
   const { data: session } = authClient.useSession();
   const user = session?.user;
@@ -109,11 +106,30 @@ export default function RecruiterDashboardPage() {
     { name: "Tesla", category: "Automotive • Austin", jobs: "31 ACTIVE JOBS" },
   ];
 
-  const handleCreateJobSubmit = (jobData) => {
-    console.log("New Job Created from Dashboard:", jobData);
-    setIsModalOpen(false);
-  };
+  const handleCreateJobSubmit = async (jobData) => {
+    try {
+      // 1. Get the active session token from Better Auth client
+      const { data: sessionData } = await authClient.getSession();
+      const token = sessionData?.session?.token;
 
+      if (!token) {
+        alert("You must be logged in to post a job.");
+        return;
+      }
+
+      // 2. Send the job data with the explicit token
+      const response = await apiRequest("POST", "/jobs", jobData, token);
+      console.log("Job posted successfully from dashboard:", response);
+
+      setIsModalOpen(false);
+      alert("Job posted successfully!");
+
+      router.refresh();
+    } catch (error) {
+      console.error("Failed to post job from dashboard:", error);
+      alert(error.message || "Failed to post job. Please try again.");
+    }
+  };
   return (
     <div className="space-y-8 relative pb-16">
       {/* Welcome Header */}

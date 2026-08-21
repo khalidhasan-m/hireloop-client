@@ -1,64 +1,87 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { JobListTable } from "./_components/JobListTable";
 import { CreateJobModal } from "./_components/CreateJobModal";
 import { HiPlus, HiMagnifyingGlass } from "react-icons/hi2";
+import { api } from "@/lib/api";
+import { authClient } from "@/lib/auth-client";
 
 export default function RecruiterJobsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock initial jobs list
-  const [jobs, setJobs] = useState([
-    {
-      title: "Senior Distributed Systems Engineer",
-      category: "Engineering • Full-time",
-      location: "SF / Remote",
-      applicantsCount: 24,
-      salary: "$180k - $240k",
-      status: "Active",
-    },
-    {
-      title: "Product Design Lead",
-      category: "Design • Full-time",
-      location: "New York",
-      applicantsCount: 18,
-      salary: "$160k - $210k",
-      status: "Active",
-    },
-    {
-      title: "DevOps Architect (Infra)",
-      category: "Infrastructure • Full-time",
-      location: "Remote",
-      applicantsCount: 12,
-      salary: "$190k+",
-      status: "Active",
-    },
-    {
-      title: "Junior Frontend Developer",
-      category: "Engineering • Contract",
-      location: "Austin, TX",
-      applicantsCount: 45,
-      salary: "$90k - $120k",
-      status: "Closed",
-    },
-  ]);
+  // Helper to get Better Auth token dynamically
+  const getAuthToken = async () => {
+    try {
+      const { data } = await authClient.getSession();
+      return (
+        data?.session?.token ||
+        localStorage.getItem("token") ||
+        localStorage.getItem("authToken")
+      );
+    } catch {
+      return localStorage.getItem("token") || localStorage.getItem("authToken");
+    }
+  };
 
-  const handleCreateJob = (newJobData) => {
-    const formattedJob = {
-      title: newJobData.title,
-      category: `${newJobData.category} • Full-time`,
-      location: newJobData.location,
-      applicantsCount: 0,
-      salary: newJobData.salary,
-      status: "Active",
-    };
-    setJobs([formattedJob, ...jobs]);
+  // Fetch recruiter's jobs on mount
+  useEffect(() => {
+    async function fetchMyJobs() {
+      try {
+        const token = await getAuthToken();
+        const response = await api.getMyJobs(token);
+        if (response && response.success) {
+          setJobs(response.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch recruiter jobs:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchMyJobs();
+  }, []);
+
+  const handleCreateJob = async (newJobData) => {
+    try {
+      const token = await getAuthToken();
+
+      const response = await api.createJob(newJobData, token);
+      console.log("Create Job Response:", response);
+
+      const createdJob = response?.data || response;
+
+      if (createdJob && response.success !== false) {
+        setJobs([createdJob, ...jobs]);
+        setIsModalOpen(false);
+      } else {
+        alert(response?.message || "Failed to create job. Check console.");
+      }
+    } catch (error) {
+      console.error("Failed to create job error:", error);
+      alert(
+        "An error occurred while posting the job. Check console for details.",
+      );
+    }
+  };
+
+  const handleDeleteJob = async (job) => {
+    try {
+      const token = await getAuthToken();
+      const response = await api.deleteJob(job._id, token);
+      if (response && response.success) {
+        setJobs(jobs.filter((j) => j._id !== job._id));
+      }
+    } catch (error) {
+      console.error("Failed to delete job:", error);
+    }
   };
 
   const filteredJobs = jobs.filter((job) =>
-    job.title.toLowerCase().includes(searchQuery.toLowerCase())
+    job.title?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -98,14 +121,20 @@ export default function RecruiterJobsPage() {
       </div>
 
       {/* Job Listings Table */}
-      <JobListTable
-        jobs={filteredJobs}
-        onViewApplicants={(job) => console.log("View applicants for:", job.title)}
-        onEditJob={(job) => console.log("Edit job:", job.title)}
-        onDeleteJob={(job) => {
-          setJobs(jobs.filter((j) => j.title !== job.title));
-        }}
-      />
+      {loading ? (
+        <div className="text-center py-12 text-gray-400 text-sm animate-pulse">
+          Loading your job postings...
+        </div>
+      ) : (
+        <JobListTable
+          jobs={filteredJobs}
+          onViewApplicants={(job) =>
+            console.log("View applicants for:", job.title)
+          }
+          onEditJob={(job) => console.log("Edit job:", job.title)}
+          onDeleteJob={handleDeleteJob}
+        />
+      )}
 
       {/* Create Job Modal */}
       <CreateJobModal
