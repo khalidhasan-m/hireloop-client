@@ -6,7 +6,7 @@ export const api = {
   getMyCompany: (token) => apiRequest("GET", "/companies/my", null, token),
   updateMyCompany: (id, data, token) =>
     apiRequest("PATCH", `/companies/${id}`, data, token),
-  getCompanies: (industry = "all", page = 1, limit = 6) => { const params = new URLSearchParams({ page: String(page), limit: String(limit) }); if (industry && industry !== "all") params.set("industry", industry); return apiRequest("GET", `/companies?${params.toString()}`); },
+  getCompanies: (industry = "all", page = 1, limit = 6, filters = {}) => { const params = new URLSearchParams({ page: String(page), limit: String(limit) }); if (industry && industry !== "all") params.set("industry", industry); Object.entries(filters).forEach(([key, value]) => { if (value !== undefined && value !== null && value !== "" && value !== "all") params.set(key, String(value)); }); return apiRequest("GET", `/companies?${params.toString()}`); },
   getCompanyById: (id) => apiRequest("GET", `/companies/${id}`),
   getProfile: (token) => apiRequest("GET", "/profile/me", null, token),
   updateProfile: (data, token) => apiRequest("PATCH", "/profile/me", data, token),
@@ -21,7 +21,7 @@ export const api = {
 
   // ==================== JOBS ====================
   createJob: (data, token) => apiRequest("POST", "/jobs", data, token),
-  getAllActiveJobs: () => apiRequest("GET", "/jobs"),
+  getAllActiveJobs: (filters = {}) => { const params = new URLSearchParams(); Object.entries(filters).forEach(([key, value]) => { if (value !== undefined && value !== null && value !== "" && value !== false) params.set(key, String(value)); }); return apiRequest("GET", `/jobs${params.toString() ? `?${params.toString()}` : ""}`); },
   getJobById: (id) => apiRequest("GET", `/jobs/${id}`),
   getMyJobs: (token) => apiRequest("GET", "/jobs/my", null, token),
   updateJob: (id, data, token) =>

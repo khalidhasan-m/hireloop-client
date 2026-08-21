@@ -21,48 +21,33 @@ export default function BrowseJobsPage() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [submittedSearch, setSubmittedSearch] = useState("");
   const [savedJobs, setSavedJobs] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
-  const [filters, setFilters] = useState({
-    FullTime: true,
-    Contract: false,
-    Remote: false,
-  });
+  const [pagination, setPagination] = useState({ page: 1, limit: 12, total: 0, totalPages: 1 });
+  const [filters, setFilters] = useState({ "Full-time": false, Contract: false, Remote: false });
 
-  // Fetch real jobs from Express backend on mount
+  // Fetch live, filtered, paginated jobs from the Express backend.
   useEffect(() => {
+    let active = true;
     async function fetchJobs() {
+      setLoading(true);
       try {
-        const response = await api.getAllActiveJobs();
-        if (response.success) {
-          setJobs(response.data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch jobs:", error);
-      } finally {
-        setLoading(false);
-      }
+        const selectedType = Object.keys(filters).find((key) => filters[key]);
+        const response = await api.getAllActiveJobs({ q: submittedSearch, jobType: selectedType, page: currentPage, limit: 12 });
+        if (active && response.success) { setJobs(response.data || []); setPagination(response.pagination || { page: currentPage, limit: 12, total: response.data?.length || 0, totalPages: 1 }); }
+      } catch (error) { if (active) { setJobs([]); setPagination({ page: 1, limit: 12, total: 0, totalPages: 1 }); console.error("Failed to fetch jobs:", error); } } finally { if (active) setLoading(false); }
     }
     fetchJobs();
-  }, []);
+    return () => { active = false; };
+  }, [submittedSearch, currentPage, filters]);
 
   const toggleBookmark = (id, e) => {
     e.preventDefault(); // Prevent triggering the card link
     setSavedJobs((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const handleCheckboxChange = (key) => {
-    setFilters((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
-
-  // Filter jobs based on search query
-  const filteredJobs = jobs.filter((job) => {
-    const matchesSearch =
-      job.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch;
-  });
+  const handleCheckboxChange = (key) => { setFilters((prev) => Object.fromEntries(Object.keys(prev).map((name) => [name, name === key ? !prev[key] : false]))); setCurrentPage(1); };
 
   return (
     <div className="relative min-h-screen bg-[#030305] text-white overflow-hidden pb-24">
@@ -90,7 +75,7 @@ export default function BrowseJobsPage() {
                 className="w-full bg-[#111116] border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500/50 transition"
               />
             </div>
-            <button className="w-full md:w-auto px-8 py-3.5 rounded-xl bg-white text-black text-xs font-semibold hover:bg-gray-200 transition shadow-[0_10px_30px_rgba(255,255,255,0.15)] cursor-pointer">
+            <button type="button" onClick={() => { setSubmittedSearch(searchQuery.trim()); setCurrentPage(1); }} className="w-full md:w-auto px-8 py-3.5 rounded-xl bg-white text-black text-xs font-semibold hover:bg-gray-200 transition shadow-[0_10px_30px_rgba(255,255,255,0.15)] cursor-pointer">
               Search Jobs
             </button>
           </div>
@@ -146,9 +131,7 @@ export default function BrowseJobsPage() {
             {/* Results Header & Sort */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <h1 className="text-lg sm:text-xl font-semibold tracking-tight text-white">
-                {loading
-                  ? "Loading jobs..."
-                  : `Found ${filteredJobs.length} Professional Jobs`}
+                {loading ? "Loading jobs..." : `Found ${pagination.total || jobs.length} Professional Jobs`}
               </h1>
 
               <div className="flex items-center gap-2 text-xs text-gray-400">
@@ -166,12 +149,12 @@ export default function BrowseJobsPage() {
                 <div className="text-center py-12 text-gray-400">
                   Loading open roles from database...
                 </div>
-              ) : filteredJobs.length === 0 ? (
+              ) : jobs.length === 0 ? (
                 <div className="text-center py-12 text-gray-400 bg-[#0b0b0e] rounded-2xl border border-white/10">
                   No active job listings found matching your search.
                 </div>
               ) : (
-                filteredJobs.map((job, index) => {
+                jobs.map((job, index) => {
                   const isSaved = (savedIds) => savedJobs[job._id];
 
                   return (
@@ -243,6 +226,7 @@ export default function BrowseJobsPage() {
                 })
               )}
             </div>
+            {!loading && jobs.length > 0 && <nav aria-label="Job pages" className="flex items-center justify-center gap-2 pt-4"><button type="button" aria-label="Previous page" disabled={currentPage <= 1} onClick={() => setCurrentPage((value) => Math.max(1, value - 1))} className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 text-gray-400 disabled:opacity-30"><HiChevronLeft /></button>{Array.from({ length: pagination.totalPages || 1 }, (_, index) => index + 1).map((number) => <button type="button" key={number} onClick={() => setCurrentPage(number)} className={`h-10 min-w-10 rounded-lg px-3 text-xs font-semibold ${number === currentPage ? "bg-white text-black" : "border border-white/10 text-gray-400"}`}>{number}</button>)}<button type="button" aria-label="Next page" disabled={currentPage >= (pagination.totalPages || 1)} onClick={() => setCurrentPage((value) => Math.min(pagination.totalPages || 1, value + 1))} className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 text-gray-400 disabled:opacity-30"><HiChevronRight /></button></nav>}
           </div>
         </div>
       </div>
