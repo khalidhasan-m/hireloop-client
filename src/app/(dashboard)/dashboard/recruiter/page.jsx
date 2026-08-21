@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { authClient } from "@/lib/auth-client";
-import { apiRequest } from "@/lib/api/client";
+import { api } from "@/lib/api";
 import {
   HiDocumentText,
   HiUsers,
@@ -14,147 +14,174 @@ import { StatsGrid } from "./_components/StatsGrid";
 import { RecentApplicationsTable } from "./_components/RecentApplicationsTable";
 import { TopCompaniesCard } from "./_components/TopCompaniesCard";
 import { CreateJobModal } from "./jobs/_components/CreateJobModal";
-import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+
+const STATUS_COLORS = {
+  applied: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
+  pending: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
+  "under review": "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  reviewing: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  shortlisted: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+  interviewing: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+  rejected: "bg-red-500/10 text-red-400 border-red-500/20",
+  offered: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+  accepted: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+};
+
+function formatDate(date) {
+  if (!date) return "—";
+  return new Date(date).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
 
 export default function RecruiterDashboardPage() {
-  const router = useRouter();
   const { data: session } = authClient.useSession();
   const user = session?.user;
-  const userName = user?.name || "Alex Sterling";
+  const userName = user?.name || "Recruiter";
 
-  // State to control the Create Job modal visibility
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [jobs, setJobs] = useState([]);
+  const [applications, setApplications] = useState([]);
+
+  const getToken = async () => {
+    const { data } = await authClient.getSession();
+    return data?.session?.token || null;
+  };
+
+  const loadDashboard = useCallback(async () => {
+    try {
+      setLoading(true);
+      const token = await getToken();
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      const jobsRes = await api.getMyJobs(token).catch(() => ({ data: [] }));
+      const myJobs = jobsRes?.data || [];
+      setJobs(myJobs);
+
+      const appPromises = myJobs.map((job) =>
+        api.getJobApplications(job._id, token).catch(() => ({ data: [] })),
+      );
+      const appResults = await Promise.all(appPromises);
+
+      const allApps = [];
+      appResults.forEach((res, idx) => {
+        const job = myJobs[idx];
+        (res?.data || []).forEach((app) => {
+          const statusRaw = (app.status || "Applied").toLowerCase();
+          allApps.push({
+            ...app,
+            role: job.title || app.jobTitle || "Unknown Role",
+            name: app.candidateName || app.name || "Candidate",
+            experience: app.experience || "—",
+            date: formatDate(app.createdAt),
+            status:
+              (app.status || "Applied").charAt(0).toUpperCase() +
+              (app.status || "Applied").slice(1),
+            statusColor:
+              STATUS_COLORS[statusRaw] ||
+              "bg-gray-500/10 text-gray-400 border-gray-500/20",
+          });
+        });
+      });
+
+      allApps.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setApplications(allApps);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load dashboard data");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadDashboard();
+  }, [loadDashboard]);
+
+  const totalJobs = jobs.length;
+  const activeJobs = jobs.filter((j) => (j.status || "active") === "active").length;
+  const closedJobs = jobs.filter((j) => j.status === "closed").length;
+  const totalApplicants = applications.length;
 
   const stats = [
     {
       title: "Total Job Posts",
-      value: "48",
+      value: loading ? "…" : String(totalJobs),
       icon: HiDocumentText,
       iconBg: "bg-blue-500/10 text-blue-400 border-blue-500/20",
     },
     {
       title: "Total Applicants",
-      value: "1,284",
+      value: loading ? "…" : String(totalApplicants),
       icon: HiUsers,
       iconBg: "bg-purple-500/10 text-purple-400 border-purple-500/20",
     },
     {
       title: "Active Jobs",
-      value: "18",
+      value: loading ? "…" : String(activeJobs),
       icon: HiBolt,
       iconBg: "bg-amber-500/10 text-amber-400 border-amber-500/20",
     },
     {
       title: "Jobs Closed",
-      value: "32",
+      value: loading ? "…" : String(closedJobs),
       icon: HiCheckCircle,
       iconBg: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
     },
   ];
 
-  const recentApplications = [
-    {
-      name: "Julianne Moore",
-      role: "Senior Product Designer",
-      date: "Oct 24, 2023",
-      experience: "6 years",
-      status: "Interviewing",
-      statusColor: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-    },
-    {
-      name: "Robert Downey",
-      role: "Backend Engineer",
-      date: "Oct 23, 2023",
-      experience: "4 years",
-      status: "New",
-      statusColor: "bg-white/10 text-gray-300 border-white/10",
-    },
-    {
-      name: "Emma Stone",
-      role: "Marketing Lead",
-      date: "Oct 22, 2023",
-      experience: "8 years",
-      status: "Reviewing",
-      statusColor: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-    },
-    {
-      name: "Chris Pratt",
-      role: "Product Manager",
-      date: "Oct 21, 2023",
-      experience: "5 years",
-      status: "Rejected",
-      statusColor: "bg-red-500/10 text-red-400 border-red-500/20",
-    },
-  ];
-
-  const topCompanies = [
-    {
-      name: "Google Inc.",
-      category: "Technology • Mountain View",
-      jobs: "24 ACTIVE JOBS",
-    },
-    {
-      name: "Meta Platforms",
-      category: "Social Media • Mountain View",
-      jobs: "18 ACTIVE JOBS",
-    },
-    {
-      name: "Stripe",
-      category: "Fintech • San Francisco",
-      jobs: "12 ACTIVE JOBS",
-    },
-    { name: "Tesla", category: "Automotive • Austin", jobs: "31 ACTIVE JOBS" },
-  ];
+  const recentApplications = applications.slice(0, 4);
 
   const handleCreateJobSubmit = async (jobData) => {
     try {
-      // 1. Get the active session token from Better Auth client
-      const { data: sessionData } = await authClient.getSession();
-      const token = sessionData?.session?.token;
-
+      const token = await getToken();
       if (!token) {
-        alert("You must be logged in to post a job.");
+        toast.error("You must be logged in to post a job.");
         return;
       }
-
-      // 2. Send the job data with the explicit token
-      const response = await apiRequest("POST", "/jobs", jobData, token);
-      console.log("Job posted successfully from dashboard:", response);
-
+      await api.createJob(jobData, token);
+      toast.success("Job posted successfully!");
       setIsModalOpen(false);
-      alert("Job posted successfully!");
-
-      router.refresh();
+      loadDashboard();
     } catch (error) {
-      console.error("Failed to post job from dashboard:", error);
-      alert(error.message || "Failed to post job. Please try again.");
+      console.error(error);
+      toast.error(error.message || "Failed to post job.");
     }
   };
+
+  const topCompanies = [
+    {
+      name: "Your Company",
+      category: "Your listings",
+      jobs: `${activeJobs} ACTIVE JOBS`,
+    },
+  ];
+
   return (
     <div className="space-y-8 relative pb-16">
-      {/* Welcome Header */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
           Welcome back, {userName}
         </h1>
         <p className="mt-1 text-xs sm:text-sm text-gray-400">
-          Here is what&apos;s happening with your job listings and applicants
-          today.
+          Here is what&apos;s happening with your job listings and applicants today.
         </p>
       </div>
 
-      {/* Stats Cards Component */}
       <StatsGrid stats={stats} />
 
-      {/* Main Section: Applications & Top Companies Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <RecentApplicationsTable applications={recentApplications} />
         <TopCompaniesCard companies={topCompanies} />
       </div>
 
-      {/* =====================================================
-          FLOATING ACTION BUTTON (OPENS CREATE JOB MODAL)
-      ====================================================== */}
       <div className="fixed bottom-8 right-8 z-40">
         <button
           onClick={() => setIsModalOpen(true)}
@@ -165,9 +192,6 @@ export default function RecruiterDashboardPage() {
         </button>
       </div>
 
-      {/* =====================================================
-          CREATE JOB MODAL COMPONENT
-      ====================================================== */}
       <CreateJobModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
