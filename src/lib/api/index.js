@@ -6,7 +6,10 @@ export const api = {
   getMyCompany: (token) => apiRequest("GET", "/companies/my", null, token),
   updateMyCompany: (id, data, token) =>
     apiRequest("PATCH", `/companies/${id}`, data, token),
+  getCompanies: (industry) => apiRequest("GET", `/companies${industry && industry !== "all" ? `?industry=${encodeURIComponent(industry)}` : ""}`),
   getCompanyById: (id) => apiRequest("GET", `/companies/${id}`),
+  getProfile: (token) => apiRequest("GET", "/profile/me", null, token),
+  updateProfile: (data, token) => apiRequest("PATCH", "/profile/me", data, token),
 
   // ==================== JOBS ====================
   createJob: (data, token) => apiRequest("POST", "/jobs", data, token),

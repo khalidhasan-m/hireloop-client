@@ -2,9 +2,11 @@ import { betterAuth } from "better-auth";
 import { MongoClient } from "mongodb";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 
-const client = new MongoClient(process.env.MONGO_DB_URI);
+const mongoUri = process.env.MONGO_DB_URI || "mongodb://127.0.0.1:27017";
+const authDbName = process.env.AUTH_DB_NAME || "hireloop_db";
+const client = new MongoClient(mongoUri);
 
-const db = client.db(process.env.AUTH_DB_NAME);
+const db = client.db(authDbName);
 
 /**
  * Public signup may only choose seeker | recruiter.
