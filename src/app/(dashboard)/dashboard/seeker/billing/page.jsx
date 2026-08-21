@@ -5,6 +5,7 @@ import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
 import { SEEKER_PLANS } from "@/lib/constants";
 import { HiCheckCircle, HiArrowDownTray } from "react-icons/hi2";
+import { cancelSubscription } from "@/lib/api/payments";
 
 export default function SeekerBillingPage() {
   const { data: session } = authClient.useSession();
@@ -21,6 +22,16 @@ export default function SeekerBillingPage() {
     return data?.session?.token || null;
   };
 
+  const handleCancel = async () => {
+    if (!window.confirm("Cancel this subscription at the end of the current billing period?")) return;
+    try {
+      const token = await getToken();
+      await cancelSubscription(token);
+      toast.success("Subscription scheduled to cancel at period end");
+    } catch (error) {
+      toast.error(error.message || "Unable to cancel subscription");
+    }
+  };
   const loadPayments = useCallback(async () => {
     try {
       setLoading(true);
@@ -99,9 +110,10 @@ export default function SeekerBillingPage() {
             <Link href="/pricing" className="inline-flex px-5 py-2.5 rounded-xl bg-white text-black text-xs font-bold hover:bg-gray-200 transition">
               Upgrade Plan
             </Link>
-            <button className="inline-flex px-5 py-2.5 rounded-xl border border-white/10 bg-white/5 text-xs font-medium text-gray-300 hover:bg-white/10 transition cursor-pointer">
+            <Link href="/pricing" className="inline-flex px-5 py-2.5 rounded-xl border border-white/10 bg-white/5 text-xs font-medium text-gray-300 hover:bg-white/10 transition cursor-pointer">
               Manage Plan
-            </button>
+            </Link>
+            {currentPlan.price > 0 && <button type="button" onClick={handleCancel} className="inline-flex px-5 py-2.5 rounded-xl border border-red-500/20 bg-red-500/5 text-xs font-medium text-red-300 hover:bg-red-500/10 transition cursor-pointer">Cancel at period end</button>}
           </div>
         </div>
 
