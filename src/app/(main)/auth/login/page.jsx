@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@heroui/react";
 import { authClient } from "@/lib/auth-client";
+import { dashboardPathForRole } from "@/lib/role-redirect";
 import toast from "react-hot-toast";
 import {
   HiArrowLeft,
@@ -91,17 +92,14 @@ export default function LoginPage() {
       if (data) {
         toast.success("Welcome back to HireLoop!");
 
-        // Fetch session or read user role to handle role-aware redirection
-        const sessionRes = await authClient.getSession();
-        const userRole = sessionRes?.data?.user?.role;
-
-        if (userRole === "recruiter") {
-          router.push("/dashboard/recruiter");
-        } else {
-          // Default fallback to seeker dashboard
-          router.push("/dashboard/seeker");
+        // Role-aware redirect (seeker | recruiter | admin)
+        let userRole = data?.user?.role;
+        if (!userRole) {
+          const sessionRes = await authClient.getSession();
+          userRole = sessionRes?.data?.user?.role;
         }
 
+        router.push(dashboardPathForRole(userRole));
         router.refresh();
       }
     } catch (err) {
