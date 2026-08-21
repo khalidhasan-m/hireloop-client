@@ -194,7 +194,7 @@ export default function Sidebar({
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className={`hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 z-30 ${adminChrome ? "lg:w-32" : "lg:w-56"}`}>
+      <aside className={`hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 z-30 ${adminChrome ? "lg:w-40" : "lg:w-56"}`}>
         {sidebarContent}
       </aside>
 
