@@ -1,123 +1,12 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { HiArrowUpRight } from "react-icons/hi2";
 
-const DEMO_AVATAR =
-  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop";
+export function ActiveRolesSidebar({ roles, hiringTeam = [] }) {
+  const activeRoles = Array.isArray(roles) ? roles : [];
+  const team = Array.isArray(hiringTeam) ? hiringTeam : [];
 
-export function ActiveRolesSidebar({ roles }) {
-  const activeRoles = roles || [
-    {
-      title: "Senior Distributed Systems Engineer",
-      location: "SF / Remote",
-      salary: "$180k - $240k",
-    },
-    {
-      title: "Product Design Lead",
-      location: "New York",
-      salary: "$160k - $210k",
-    },
-    {
-      title: "DevOps Architect (Infra)",
-      location: "Remote",
-      salary: "$190k+",
-    },
-  ];
-
-  return (
-    <div className="space-y-6">
-      {/* Active Roles Card */}
-      <div className="rounded-2xl border border-white/10 bg-[#0b0b0f]/80 p-6 backdrop-blur-xl">
-        <div className="flex items-center justify-between mb-5">
-          <h3 className="text-sm font-bold text-white">Active Roles</h3>
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-gray-300">
-            14
-          </span>
-        </div>
-
-        <div className="space-y-3">
-          {activeRoles.map((role, idx) => (
-            <div
-              key={idx}
-              className="p-4 rounded-xl border border-white/5 bg-white/2 hover:bg-white/5 transition space-y-3"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <h4 className="text-xs font-semibold text-white leading-snug">
-                  {role.title}
-                </h4>
-                <HiArrowUpRight className="text-gray-500 text-sm shrink-0" />
-              </div>
-
-              <div className="flex items-center gap-2 flex-wrap text-[10px] text-gray-400 font-medium">
-                <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10">
-                  {role.location}
-                </span>
-                <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10">
-                  {role.salary}
-                </span>
-              </div>
-
-              <div className="pt-1 flex items-center justify-between">
-                <div className="flex -space-x-1.5 overflow-hidden">
-                  <div className="relative w-5 h-5 rounded-full border border-black overflow-hidden">
-                    <Image
-                      src={DEMO_AVATAR}
-                      alt="Applicant"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <span className="text-[9px] text-gray-500 font-bold pl-2 self-center">
-                    +12
-                  </span>
-                </div>
-
-                <button className="px-3 py-1 rounded-lg bg-white text-black text-[10px] font-bold hover:bg-gray-200 transition">
-                  Quick Apply
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <Link
-          href="/dashboard/recruiter/jobs"
-          className="block w-full text-center mt-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-xs font-medium text-gray-300 hover:bg-white/10 transition"
-        >
-          See all 14 openings
-        </Link>
-      </div>
-
-      {/* Hiring Team Card */}
-      <div className="rounded-2xl border border-white/10 bg-[#0b0b0f]/80 p-6 backdrop-blur-xl space-y-4">
-        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-          Hiring Team
-        </h3>
-
-        <div className="flex items-center gap-3">
-          <div className="relative w-10 h-10 rounded-full overflow-hidden border border-white/10 shrink-0">
-            <Image
-              src={DEMO_AVATAR}
-              alt="Sarah Chen"
-              fill
-              className="object-cover"
-            />
-          </div>
-          <div>
-            <p className="text-xs font-bold text-white">Sarah Chen</p>
-            <p className="text-[10px] text-gray-500">
-              Head of Talent Acquisition
-            </p>
-          </div>
-        </div>
-
-        <button className="w-full py-2.5 rounded-xl border border-white/10 bg-white/5 text-xs font-medium text-white hover:bg-white/10 transition">
-          Message Team
-        </button>
-      </div>
-    </div>
-  );
+  return <div className="space-y-6"><div className="rounded-2xl border border-white/10 bg-[#0b0b0f]/80 p-6 backdrop-blur-xl"><div className="mb-5 flex items-center justify-between"><h3 className="text-sm font-bold text-white">Active Roles</h3><span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-bold text-gray-300">{activeRoles.length}</span></div>{activeRoles.length ? <div className="space-y-3">{activeRoles.map((role) => <Link href={role._id ? `/jobs/${role._id}` : "/dashboard/recruiter/jobs"} key={role._id || role.title} className="block space-y-3 rounded-xl border border-white/5 bg-white/[.02] p-4 transition hover:bg-white/5"><div className="flex items-start justify-between gap-2"><h4 className="text-xs font-semibold leading-snug text-white">{role.title}</h4><HiArrowUpRight className="shrink-0 text-sm text-gray-500" /></div><div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-gray-400"><span className="rounded border border-white/10 bg-white/5 px-2 py-0.5">{role.location || "Location not listed"}</span><span className="rounded border border-white/10 bg-white/5 px-2 py-0.5">{role.salaryRange || role.salary || "Salary not listed"}</span></div></Link>)}</div> : <p className="rounded-xl border border-dashed border-white/10 p-5 text-center text-xs text-gray-500">No active roles available from the API.</p>}<Link href="/dashboard/recruiter/jobs" className="mt-4 block w-full rounded-xl border border-white/10 bg-white/5 py-2.5 text-center text-xs font-medium text-gray-300 transition hover:bg-white/10">See all {activeRoles.length} openings</Link></div><div className="space-y-4 rounded-2xl border border-white/10 bg-[#0b0b0f]/80 p-6 backdrop-blur-xl"><h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">Hiring Team</h3>{team.length ? team.map((member) => <div key={member._id || member.email} className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/5 text-xs font-bold text-gray-400">{member.image ? <img src={member.image} alt="" className="h-full w-full object-cover" /> : member.name?.[0]?.toUpperCase() || "?"}</div><div><p className="text-xs font-bold text-white">{member.name || "Team member"}</p><p className="text-[10px] text-gray-500">{member.title || member.role || "Hiring team"}</p></div></div>) : <p className="text-xs text-gray-500">No hiring team data available.</p>}</div></div>;
 }

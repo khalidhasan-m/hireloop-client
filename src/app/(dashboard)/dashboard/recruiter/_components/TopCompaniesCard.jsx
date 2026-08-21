@@ -17,7 +17,7 @@ export function TopCompaniesCard({ companies }) {
         </div>
 
         <div className="space-y-4">
-          {companies.map((company, idx) => (
+          {Array.isArray(companies) && companies.length ? companies.map((company, idx) => (
             <div
               key={idx}
               className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition"
@@ -37,7 +37,7 @@ export function TopCompaniesCard({ companies }) {
                 </span>
               </div>
             </div>
-          ))}
+          )) : <p className="rounded-xl border border-dashed border-white/10 p-5 text-center text-xs text-gray-500">No company data available from the API.</p>}
         </div>
       </div>
 

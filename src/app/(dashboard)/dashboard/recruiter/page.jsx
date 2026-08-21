@@ -46,6 +46,7 @@ export default function RecruiterDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [jobs, setJobs] = useState([]);
   const [applications, setApplications] = useState([]);
+  const [company, setCompany] = useState(null);
 
   const getToken = async () => {
     const { data } = await authClient.getSession();
@@ -61,6 +62,8 @@ export default function RecruiterDashboardPage() {
         return;
       }
 
+      const companyRes = await api.getMyCompany(token).catch(() => ({ data: null }));
+      setCompany(companyRes?.data || null);
       const jobsRes = await api.getMyJobs(token).catch(() => ({ data: [] }));
       const myJobs = jobsRes?.data || [];
       setJobs(myJobs);
@@ -156,13 +159,7 @@ export default function RecruiterDashboardPage() {
     }
   };
 
-  const topCompanies = [
-    {
-      name: "Your Company",
-      category: "Your listings",
-      jobs: `${activeJobs} ACTIVE JOBS`,
-    },
-  ];
+  const topCompanies = company ? [{ name: company.name, category: company.industry || "Company", jobs: `${activeJobs} ACTIVE JOBS`, logo: company.logo || company.logoUrl }] : [];
 
   return (
     <div className="space-y-8 relative pb-16">

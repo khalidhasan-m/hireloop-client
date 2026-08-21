@@ -13,15 +13,9 @@ import { CompanyStatsGrid } from "./CompanyStatsGrid";
 import { ActiveRolesSidebar } from "./ActiveRolesSidebar";
 import { LifeAtCompanyGallery } from "./LifeAtCompanyGallery";
 
-const DEMO_BANNER =
-  "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1200&auto=format&fit=crop";
-const DEMO_LOGO =
-  "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=200&auto=format&fit=crop";
-
 export function RegisteredCompanyView({ companyData }) {
-  // Fallbacks for image URLs
-  const bannerSrc = companyData?.bannerUrl || DEMO_BANNER;
-  const logoSrc = companyData?.logoUrl || DEMO_LOGO;
+  const bannerSrc = companyData?.bannerUrl || null;
+  const logoSrc = companyData?.logoUrl || null;
 
   return (
     <div className="space-y-8 pb-12">
@@ -31,13 +25,7 @@ export function RegisteredCompanyView({ companyData }) {
       <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-[#0b0b0f]">
         {/* Globe/Tech Banner Background */}
         <div className="relative h-48 sm:h-64 w-full">
-          <Image
-            src={bannerSrc}
-            alt="Company Banner"
-            fill
-            priority
-            className="object-cover opacity-60 mix-blend-screen"
-          />
+          {bannerSrc ? <Image src={bannerSrc} alt="Company Banner" fill priority className="object-cover opacity-60 mix-blend-screen" /> : <div className="absolute inset-0 bg-linear-to-br from-white/10 via-indigo-950/30 to-transparent" aria-label="No company banner uploaded" />}
           <div className="absolute inset-0 bg-linear-to-t from-[#0b0b0f] via-[#0b0b0f]/40 to-transparent" />
         </div>
 
@@ -46,27 +34,21 @@ export function RegisteredCompanyView({ companyData }) {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
             {/* Logo */}
             <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl border-2 border-white/10 bg-[#121218] overflow-hidden shadow-2xl shrink-0">
-              <Image
-                src={logoSrc}
-                alt={companyData?.name || "Company Logo"}
-                fill
-                className="object-cover p-2 rounded-2xl"
-              />
+                {logoSrc ? <Image src={logoSrc} alt={companyData?.name || "Company Logo"} fill className="object-cover p-2 rounded-2xl" /> : <span className="text-3xl font-black text-gray-400">{companyData?.name?.[0]?.toUpperCase() || "?"}</span>}
             </div>
 
             {/* Titles & Badge */}
             <div className="space-y-1.5">
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                  {companyData?.name || "LuminaTech Systems"}
+                  {companyData?.name || "Company"}
                 </h1>
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                   <HiCheckBadge className="text-xs" /> Approved
                 </span>
               </div>
               <p className="text-xs sm:text-sm text-gray-400 max-w-xl">
-                {companyData?.tagline ||
-                  "Engineering the future of enterprise cloud intelligence and distributed ledger solutions."}
+                {companyData?.tagline || companyData?.industry || "No company tagline provided."}
               </p>
             </div>
           </div>
@@ -98,16 +80,9 @@ export function RegisteredCompanyView({ companyData }) {
         <div className="lg:col-span-2 space-y-8">
           {/* About Section */}
           <section className="space-y-3">
-            <h2 className="text-lg font-bold text-white">About LuminaTech</h2>
+            <h2 className="text-lg font-bold text-white">About {companyData?.name || "Company"}</h2>
             <p className="text-xs sm:text-sm text-gray-400 leading-relaxed font-light">
-              {companyData?.about ||
-                "Founded in 2014, LuminaTech Systems has emerged as a global leader in high-performance cloud infrastructure and decentralized computing systems. We bridge the gap between traditional enterprise legacy architectures and the next generation of intelligent, automated cloud ecosystems."}
-            </p>
-            <p className="text-xs sm:text-sm text-gray-400 leading-relaxed font-light">
-              Our mission is to empower organizations with resilient, scalable,
-              and secure technologies that drive meaningful progress. With a
-              focus on R&D, LuminaTech holds over 140 patents in data encryption
-              and real-time processing.
+              {companyData?.about || "No company description provided."}
             </p>
           </section>
 
@@ -115,7 +90,7 @@ export function RegisteredCompanyView({ companyData }) {
           <CompanyStatsGrid stats={companyData?.stats} />
 
           {/* Life at Company Gallery */}
-          <LifeAtCompanyGallery photos={companyData?.gallery} />
+          <LifeAtCompanyGallery photos={companyData?.gallery} companyName={companyData?.name} />
         </div>
 
         {/* Right Column (1 Col): Active Roles & Hiring Team */}
