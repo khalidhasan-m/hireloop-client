@@ -168,7 +168,7 @@ export default function PricingSection() {
                         ${price}
                       </span>
                       <span className="text-xs text-gray-500 font-medium">
-                        /month
+                        /{isYearly ? "month billed yearly" : "month"}
                       </span>
                     </div>
                   </div>
@@ -196,7 +196,7 @@ export default function PricingSection() {
                 {/* Card Footer / Button */}
                 <div className="pt-8 mt-8 border-t border-white/5">
                   <Link
-                    href="/auth/signup"
+                    href={`/auth/signup?plan=${encodeURIComponent(plan.name.toLowerCase())}`}
                     className={`w-full inline-flex items-center justify-between px-5 py-3 rounded-xl text-xs font-semibold transition shadow-lg cursor-pointer ${
                       plan.highlighted
                         ? "bg-white text-black hover:bg-gray-200"

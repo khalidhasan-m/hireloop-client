@@ -49,7 +49,7 @@ export default function Navbar() {
       href: "/jobs",
     },
     {
-      label: "Company",
+      label: "Companies",
       href: "/companies",
     },
     {
