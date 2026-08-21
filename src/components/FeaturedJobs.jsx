@@ -65,7 +65,7 @@ export default function FeaturedJobs() {
             transition={{ duration: 0.7, delay: 0.15 }}
             className="text-[32px] sm:text-4xl md:text-[44px] font-semibold tracking-[-0.045em] leading-[1.1]"
           >
-            The roles you would never find by searching
+            The roles you'd never find by searching
           </motion.h2>
         </div>
 
@@ -92,7 +92,7 @@ export default function FeaturedJobs() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: index * 0.08 }}
                   whileHover={{ y: -4 }}
-                  className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0b0b0e]/95 p-6 shadow-[0_15px_45px_rgba(0,0,0,.5)] backdrop-blur-xl transition duration-300 flex flex-col justify-between h-full"
+                  className="relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-[#151515] p-6 shadow-[0_15px_45px_rgba(0,0,0,.35)] backdrop-blur-xl transition duration-300"
                 >
                   <div className="absolute left-0 right-0 top-0 h-px bg-white/12" />
 
@@ -101,29 +101,28 @@ export default function FeaturedJobs() {
                       {job.title}
                     </h3>
                     <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">
-                      {job.description ||
-                        "Exciting opportunity to join our growing team."}
+                      {job.description || "No description provided."}
                     </p>
 
                     <div className="flex flex-wrap gap-2 pt-1">
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-white/10 bg-[#111116]/80 text-[11px] font-medium text-gray-300">
                         <HiMapPin className="text-indigo-400 text-xs" />
-                        {job.location || "Remote"}
+                        {job.location || "Location not specified"}
                       </span>
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-white/10 bg-[#111116]/80 text-[11px] font-medium text-gray-300">
                         <HiBriefcase className="text-purple-400 text-xs" />
-                        {job.jobType || "Full-time"}
+                        {job.jobType || "Job type not specified"}
                       </span>
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-white/10 bg-[#111116]/80 text-[11px] font-medium text-gray-300">
                         <HiBanknotes className="text-emerald-400 text-xs" />
-                        {job.salaryRange || "Competitive"}
+                        {job.salaryRange || "Salary not specified"}
                       </span>
                     </div>
                   </div>
 
-                  <div className="pt-6 mt-6 border-t border-white/5 flex items-center justify-between text-xs font-semibold text-gray-300 group-hover:text-indigo-400 transition">
-                    <span>View Details</span>
-                    <HiArrowRight className="text-xs transition-transform group-hover:translate-x-1" />
+                  <div className="mt-8 flex items-center gap-2 text-sm font-medium text-white transition group-hover:text-indigo-300">
+                    <span>Apply Now</span>
+                    <HiArrowRight className="text-sm transition-transform group-hover:translate-x-1" />
                   </div>
                 </motion.div>
               </Link>
@@ -143,7 +142,7 @@ export default function FeaturedJobs() {
             href="/jobs"
             className="inline-flex items-center justify-center px-7 py-3.5 rounded-xl bg-white text-black text-xs font-semibold hover:bg-gray-200 transition shadow-[0_10px_30px_rgba(255,255,255,0.15)] cursor-pointer"
           >
-            View all job open
+            View all jobs
           </Link>
         </motion.div>
       </div>
