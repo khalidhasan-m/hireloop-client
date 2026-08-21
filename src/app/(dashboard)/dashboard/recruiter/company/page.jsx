@@ -100,11 +100,12 @@ export default function RecruiterCompanyPage() {
         location: formData.location || null,
         employeeCount: formData.employeeRange || formData.employeeCount || null,
         description: formData.description || null,
-        logo: null, // file upload can be added later
+        logo: null,
         status: "Pending",
       };
 
       const res = await api.createCompany(payload, token);
+      if (formData.logo && res?.data?._id) { await api.uploadCompanyLogo(res.data._id, formData.logo, token); }
       toast.success("Company registered successfully!");
       setIsModalOpen(false);
 

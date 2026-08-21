@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { authClient } from "@/lib/auth-client";
+import { api } from "@/lib/api";
 import { HiUser, HiDocumentText } from "react-icons/hi2";
 import toast from "react-hot-toast";
 
@@ -17,6 +18,7 @@ export default function SeekerSettingsPage() {
   const [skillInput, setSkillInput] = useState("");
   const [saving, setSaving] = useState(false);
   const [resumeName, setResumeName] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -42,6 +44,9 @@ export default function SeekerSettingsPage() {
     setSkills((prev) => prev.filter((x) => x !== skill));
   };
 
+  const upload = async (kind, file) => { if (!file) return; setUploading(true); try { const { data } = await authClient.getSession(); const result = kind === "resume" ? await api.uploadResume(file, data?.session?.token) : await api.uploadAvatar(file, data?.session?.token); if (kind === "resume") setResumeName(file.name); toast.success(`${kind === "resume" ? "Resume" : "Avatar"} uploaded`); } catch (error) { toast.error(error.message || "Upload failed"); } finally { setUploading(false); } };
+  const handleSaveDetails = async () => { setSaving(true); try { const { data } = await authClient.getSession(); const result = await api.updateProfile({ headline, bio, skills }, data?.session?.token); if (result?.data) toast.success("Professional details saved"); } catch (error) { toast.error(error.message || "Failed to save details"); } finally { setSaving(false); } };
+
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -57,16 +62,7 @@ export default function SeekerSettingsPage() {
     }
   };
 
-  const handleSaveDetails = async () => {
-    setSaving(true);
-    try {
-      toast.success("Professional details saved");
-    } catch {
-      toast.error("Failed to save details");
-    } finally {
-      setSaving(false);
-    }
-  };
+
 
   if (isPending) {
     return (
@@ -97,9 +93,7 @@ export default function SeekerSettingsPage() {
               )}
             </div>
             <div>
-              <button type="button" className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 text-[11px] font-medium text-gray-300 hover:bg-white/10 transition cursor-pointer">
-                Change Avatar
-              </button>
+              <label className="inline-flex cursor-pointer px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 text-[11px] font-medium text-gray-300 hover:bg-white/10 transition">{uploading ? "Uploading…" : "Change Avatar"}<input type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="hidden" onChange={(event) => upload("avatar", event.target.files?.[0])} /></label>
               <p className="text-[10px] text-gray-500 mt-1">JPG, GIF or PNG. Max size of 5MB.</p>
             </div>
           </div>
@@ -123,10 +117,7 @@ export default function SeekerSettingsPage() {
                 className="px-5 py-2.5 rounded-xl bg-white text-black text-xs font-bold hover:bg-gray-200 transition disabled:opacity-50 cursor-pointer">
                 {saving ? "Saving..." : "Update Profile"}
               </button>
-              <button type="button"
-                className="px-5 py-2.5 rounded-xl border border-white/10 bg-white/5 text-xs font-medium text-gray-300 hover:bg-white/10 transition cursor-pointer">
-                Reset Password
-              </button>
+              <button type="button" onClick={() => toast("Use the password reset email flow from the login screen.")} className="px-5 py-2.5 rounded-xl border border-white/10 bg-white/5 text-xs font-medium text-gray-300 hover:bg-white/10 transition cursor-pointer">Reset Password</button>
             </div>
           </form>
         </div>
@@ -141,8 +132,8 @@ export default function SeekerSettingsPage() {
               <p className="text-xs font-medium text-white truncate">{resumeName}</p>
               <p className="text-[10px] text-gray-500 mt-0.5">Last updated recently</p>
               <div className="flex gap-2 justify-center mt-3">
-                <button type="button" className="px-3 py-1.5 rounded-lg border border-white/10 text-[11px] text-gray-300 hover:bg-white/5 transition cursor-pointer">Replace</button>
-                <button type="button" onClick={() => setResumeName(null)}
+                <label className="cursor-pointer px-3 py-1.5 rounded-lg border border-white/10 text-[11px] text-gray-300 hover:bg-white/5 transition">Replace<input type="file" accept=".pdf,application/pdf" className="hidden" onChange={(event) => upload("resume", event.target.files?.[0])} /></label>
+                <button type="button" onClick={async () => { const { data } = await authClient.getSession(); await api.updateProfile({ resumeUrl: null }, data?.session?.token); setResumeName(null); }}
                   className="px-3 py-1.5 rounded-lg border border-red-500/20 text-[11px] text-red-400 hover:bg-red-500/10 transition cursor-pointer">Remove</button>
               </div>
             </div>
@@ -150,7 +141,7 @@ export default function SeekerSettingsPage() {
             <label className="flex flex-col items-center justify-center rounded-xl border border-dashed border-white/15 bg-white/2 p-8 cursor-pointer hover:border-indigo-500/40 transition">
               <HiDocumentText className="text-2xl text-gray-500 mb-2" />
               <span className="text-[11px] text-gray-400">Click to upload PDF resume</span>
-              <input type="file" accept=".pdf" className="hidden" />
+              <input type="file" accept=".pdf,application/pdf" className="hidden" onChange={(event) => upload("resume", event.target.files?.[0])} />
             </label>
           )}
         </div>
