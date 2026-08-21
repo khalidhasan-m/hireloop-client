@@ -1,68 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import { HiCreditCard, HiCalendarDays, HiUserGroup, HiBuildingOffice2 } from "react-icons/hi2";
 import toast from "react-hot-toast";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5050/api";
-
-export default function AdminPaymentsPage() {
-  const [payments, setPayments] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const load = useCallback(async () => {
-    try {
-      setLoading(true);
-      const { data } = await authClient.getSession();
-      const token = data?.session?.token;
-      const res = await fetch(`${API}/admin/payments`, {
-        headers: { Authorization: `Bearer ${token}` },
-        credentials: "include",
-      });
-      const json = await res.json();
-      if (res.ok) setPayments(json.data || []);
-    } catch {
-      toast.error("Failed to load payments");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
-
-  return (
-    <div className="space-y-6">
-      <h1 className="text-xl font-bold text-white">Payments</h1>
-      <div className="rounded-2xl border border-white/10 bg-[#0b0b0f]/80 overflow-hidden">
-        <table className="w-full text-left text-xs">
-          <thead>
-            <tr className="border-b border-white/10 text-gray-400 uppercase text-[11px]">
-              <th className="py-3 px-5">User</th>
-              <th className="py-3 px-5">Plan</th>
-              <th className="py-3 px-5">Amount</th>
-              <th className="py-3 px-5">Status</th>
-              <th className="py-3 px-5">Date</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/5">
-            {loading ? (
-              <tr><td colSpan={5} className="py-10 text-center text-gray-500">Loading...</td></tr>
-            ) : payments.length === 0 ? (
-              <tr><td colSpan={5} className="py-10 text-center text-gray-500">No payments</td></tr>
-            ) : (
-              payments.map((p) => (
-                <tr key={p._id} className="hover:bg-white/2">
-                  <td className="py-3 px-5 text-gray-300 font-mono text-[10px]">{p.userId}</td>
-                  <td className="py-3 px-5 text-white">{p.plan}</td>
-                  <td className="py-3 px-5 text-gray-300">${Number(p.amount || 0).toFixed(2)}</td>
-                  <td className="py-3 px-5 text-emerald-400 uppercase text-[10px] font-bold">{p.status}</td>
-                  <td className="py-3 px-5 text-gray-500">{p.createdAt ? new Date(p.createdAt).toLocaleDateString() : "—"}</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
+const money = (n) => `$${Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+export default function AdminPaymentsPage() { const [payments, setPayments] = useState([]); const [query, setQuery] = useState(""); const [status, setStatus] = useState("all"); const [loading, setLoading] = useState(true); useEffect(() => { (async () => { try { const token = (await authClient.getSession()).data?.session?.token; const res = await fetch(`${API}/admin/payments`, { headers: { Authorization: `Bearer ${token}` }, credentials: "include" }); const json = await res.json(); if (!res.ok) throw new Error(json.message); setPayments(json.data || []); } catch (e) { toast.error(e.message || "Failed to load payments"); } finally { setLoading(false); } })(); }, []); const filtered = useMemo(() => payments.filter((p) => (!query || `${p.userEmail} ${p.userId} ${p.plan} ${p.transactionId} ${p.stripeSessionId}`.toLowerCase().includes(query.toLowerCase())) && (status === "all" || p.status === status)), [payments, query, status]); const successful = payments.filter((p) => p.status === "succeeded"); const total = successful.reduce((n, p) => n + Number(p.amount || 0), 0); const monthly = successful.filter((p) => p.createdAt && new Date(p.createdAt) > new Date(Date.now() - 30 * 86400000)).reduce((n, p) => n + Number(p.amount || 0), 0); const cards = [["Total Revenue", money(total), HiCreditCard], ["Monthly Revenue", money(monthly), HiCalendarDays], ["Active Seeker Subscriptions", payments.filter((p) => p.role === "seeker" && p.status === "succeeded").length, HiUserGroup], ["Active Recruiter Subscriptions", payments.filter((p) => p.role === "recruiter" && p.status === "succeeded").length, HiBuildingOffice2]]; return <main className="space-y-7 text-white"><div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs uppercase tracking-[.22em] text-indigo-400">Admin Console</p><h1 className="mt-2 text-3xl font-bold">Payments & Subscriptions</h1><p className="mt-1 text-sm text-gray-400">Comprehensive overview of platform revenue and active subscriptions.</p></div><button className="rounded-xl bg-white px-4 py-2 text-xs font-semibold text-black">Export CSV</button></div><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{cards.map(([label, value, Icon]) => <div key={label} className="rounded-2xl border border-white/10 bg-[#151519] p-5"><div className="flex justify-between text-gray-400"><span className="text-[11px]">{label}</span><Icon className="text-lg text-indigo-400" /></div><p className="mt-3 text-2xl font-bold">{loading ? "…" : value}</p><p className="mt-2 text-[10px] text-emerald-400">Live records</p></div>)}</div><div className="flex flex-wrap gap-3 rounded-2xl border border-white/10 bg-[#151519] p-4"><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search transactions, users, or IDs…" className="min-w-[260px] flex-1 rounded-xl border border-white/10 bg-white/[.04] px-4 py-2.5 text-sm text-white outline-none" /><select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-xl border border-white/10 bg-[#111118] px-4 py-2.5 text-sm text-white"><option value="all">All statuses</option><option value="succeeded">Success</option><option value="pending">Pending</option><option value="failed">Failed</option></select></div><section className="rounded-2xl border border-white/10 bg-[#151519] p-6"><h2 className="mb-4 font-semibold">Recent Transactions</h2><div className="overflow-x-auto"><table className="w-full min-w-[850px] text-left text-xs"><thead className="border-b border-white/10 text-[10px] uppercase text-gray-500"><tr><th className="p-3">User Email</th><th className="p-3">Plan</th><th className="p-3">Amount</th><th className="p-3">Date</th><th className="p-3">Transaction ID</th><th className="p-3">Status</th></tr></thead><tbody>{filtered.map((p) => <tr key={p._id} className="border-b border-white/5"><td className="p-3 text-gray-300">{p.userEmail || p.userId}</td><td className="p-3">{p.plan}</td><td className="p-3 font-semibold">{money(p.amount)}</td><td className="p-3 text-gray-400">{p.createdAt ? `${new Date(p.createdAt).toLocaleDateString()} · ${Math.max(0, Math.floor((Date.now() - new Date(p.createdAt)) / 86400000))} days ago` : "—"}</td><td className="p-3 font-mono text-[10px] text-gray-400">{p.transactionId || p.stripeSessionId || "—"}</td><td className="p-3"><span className="rounded-full bg-emerald-400/10 px-2 py-1 text-[10px] text-emerald-300">{p.status}</span></td></tr>)}</tbody></table></div></section><div className="grid gap-5 xl:grid-cols-2"><section className="rounded-2xl border border-white/10 bg-[#151519] p-6"><h2 className="font-semibold">Revenue Trend</h2><div className="mt-8 flex h-36 items-end gap-2">{successful.slice(-14).map((p, i) => <div key={p._id || i} className="flex-1 rounded-t bg-indigo-400/70" style={{ height: `${Math.max(Number(p.amount || 0) / Math.max(...successful.map((x) => Number(x.amount || 0)), 1) * 100, 5)}%` }} />)}</div></section><section className="rounded-2xl border border-white/10 bg-[#151519] p-6"><h2 className="font-semibold">Plan Distribution</h2>{["FREE", "PRO", "PREMIUM", "GROWTH", "ENTERPRISE"].map((plan) => { const count = payments.filter((p) => p.plan === plan && p.status === "succeeded").length; const percent = payments.length ? Math.round(count / payments.length * 100) : 0; return <div key={plan} className="mt-5"><div className="flex justify-between text-xs"><span>{plan}</span><span className="text-gray-400">{percent}%</span></div><div className="mt-2 h-2 rounded-full bg-white/10"><div className="h-full rounded-full bg-emerald-400" style={{ width: `${percent}%` }} /></div></div>; })}</section></div></main>; }

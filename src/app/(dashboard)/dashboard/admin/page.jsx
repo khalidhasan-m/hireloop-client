@@ -1,67 +1,17 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
-import { HiUsers, HiBuildingOffice2, HiBriefcase, HiCreditCard } from "react-icons/hi2";
+import { HiUsers, HiBuildingOffice2, HiBriefcase, HiCreditCard, HiArrowTrendingUp, HiCalendarDays } from "react-icons/hi2";
 import toast from "react-hot-toast";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5050/api";
-
+const money = (value) => `$${Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 export default function AdminHomePage() {
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  const load = useCallback(async () => {
-    try {
-      setLoading(true);
-      const { data } = await authClient.getSession();
-      const token = data?.session?.token;
-      if (!token) return;
-      const res = await fetch(`${API}/admin/stats`, {
-        headers: { Authorization: `Bearer ${token}` },
-        credentials: "include",
-      });
-      const json = await res.json();
-      if (res.ok) setStats(json.data);
-      else toast.error(json.message || "Failed to load stats");
-    } catch (e) {
-      toast.error("Failed to load admin stats");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
-
-  const cards = [
-    { title: "Users", value: stats?.users, icon: HiUsers, color: "text-blue-400" },
-    { title: "Companies", value: stats?.companies, icon: HiBuildingOffice2, color: "text-purple-400" },
-    { title: "Pending Companies", value: stats?.pendingCompanies, icon: HiBuildingOffice2, color: "text-amber-400" },
-    { title: "Jobs", value: stats?.jobs, icon: HiBriefcase, color: "text-emerald-400" },
-    { title: "Applications", value: stats?.applications, icon: HiBriefcase, color: "text-indigo-400" },
-    { title: "Payments", value: stats?.payments, icon: HiCreditCard, color: "text-pink-400" },
-  ];
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
-        <p className="text-xs text-gray-400 mt-1">Platform overview and moderation controls.</p>
-      </div>
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-        {cards.map((c) => {
-          const Icon = c.icon;
-          return (
-            <div key={c.title} className="rounded-2xl border border-white/10 bg-[#0b0b0f]/80 p-5">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-gray-400">{c.title}</span>
-                <Icon className={`text-lg ${c.color}`} />
-              </div>
-              <p className="text-2xl font-bold text-white mt-2">{loading ? "…" : c.value ?? 0}</p>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
+  const [stats, setStats] = useState(null); const [analytics, setAnalytics] = useState(null); const [payments, setPayments] = useState([]); const [loading, setLoading] = useState(true);
+  useEffect(() => { (async () => { try { const { data } = await authClient.getSession(); const token = data?.session?.token; const headers = { Authorization: `Bearer ${token}` }; const [s, a, p] = await Promise.all([fetch(`${API}/admin/stats`, { headers, credentials: "include" }), fetch(`${API}/analytics/admin`, { headers, credentials: "include" }), fetch(`${API}/admin/payments`, { headers, credentials: "include" })]); const [sj, aj, pj] = await Promise.all([s.json(), a.json(), p.json()]); if (!s.ok) throw new Error(sj.message); setStats(sj.data); setAnalytics(aj.data); setPayments((pj.data || []).slice(0, 6)); } catch (error) { toast.error(error.message || "Unable to load admin dashboard"); } finally { setLoading(false); } })(); }, []);
+  const cards = [{ title: "Total Users", value: stats?.users, icon: HiUsers }, { title: "Total Recruiters", value: stats?.recruiters, icon: HiUsers }, { title: "Total Companies", value: stats?.companies, icon: HiBuildingOffice2 }, { title: "Jobs Posted", value: stats?.jobs, icon: HiBriefcase }, { title: "Platform Revenue", value: money(analytics?.revenue), icon: HiCreditCard }];
+  const maxCategory = Math.max(...(analytics?.categories || []).map((item) => item.jobs), 1); const maxRegistration = Math.max(...(analytics?.registrations || []).map((item) => item.users), 1);
+  return <main className="space-y-7 text-white"><div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs uppercase tracking-[.22em] text-indigo-400">Admin Console</p><h1 className="mt-2 text-3xl font-bold">Dashboard Overview</h1><p className="mt-1 text-sm text-gray-400">Real-time platform performance and growth metrics.</p></div><div className="flex gap-2"><button className="rounded-xl border border-white/10 px-4 py-2 text-xs text-gray-300"><HiCalendarDays className="mr-2 inline" />Last 30 Days</button><button className="rounded-xl bg-white px-4 py-2 text-xs font-semibold text-black">Export Report</button></div></div><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">{cards.map(({ title, value, icon: Icon }) => <div key={title} className="rounded-2xl border border-white/10 bg-[#151519] p-5"><div className="flex items-center justify-between text-gray-400"><span className="text-[11px]">{title}</span><Icon className="text-lg text-indigo-400" /></div><p className="mt-3 text-2xl font-bold">{loading ? "…" : value ?? 0}</p><p className="mt-2 text-[10px] text-emerald-400"><HiArrowTrendingUp className="mr-1 inline" />Live data</p></div>)}</div><div className="grid gap-5 xl:grid-cols-2"><section className="rounded-2xl border border-white/10 bg-[#151519] p-6"><div className="flex items-center justify-between"><h2 className="font-semibold">Job Posts by Category</h2><span className="text-xs text-gray-500">Active listings</span></div><div className="mt-8 flex h-52 items-end gap-4">{(analytics?.categories || []).slice(0, 7).map((item) => <div key={item._id || "Other"} className="flex flex-1 flex-col items-center gap-2"><div className="w-full rounded-t-lg bg-indigo-400/80" style={{ height: `${Math.max((item.jobs / maxCategory) * 100, 5)}%` }} title={`${item.jobs} jobs`} /><span className="w-full truncate text-center text-[10px] text-gray-500">{item._id || "Other"}</span></div>)}</div></section><section className="rounded-2xl border border-white/10 bg-[#151519] p-6"><div className="flex items-center justify-between"><h2 className="font-semibold">New Users (30d)</h2><span className="text-xs text-emerald-400">Registration trend</span></div><div className="mt-8 flex h-52 items-end gap-1">{(analytics?.registrations || []).map((item) => <div key={item._id} className="group flex flex-1 flex-col justify-end"><div className="rounded-t bg-emerald-400/70" style={{ height: `${Math.max((item.users / maxRegistration) * 100, 4)}%` }} title={`${item._id}: ${item.users}`} /></div>)}</div><div className="mt-3 flex justify-between text-[10px] text-gray-500"><span>30 days ago</span><span>Today</span></div></section></div><section className="rounded-2xl border border-white/10 bg-[#151519] p-6"><div className="mb-4 flex items-center justify-between"><h2 className="font-semibold">Recent Subscription Transactions</h2><Link href="/dashboard/admin/payments" className="text-xs text-indigo-300">View all activity</Link></div><div className="overflow-x-auto"><table className="w-full min-w-[680px] text-left text-xs"><thead className="border-b border-white/10 text-[10px] uppercase text-gray-500"><tr><th className="p-3">User</th><th className="p-3">Plan</th><th className="p-3">Amount</th><th className="p-3">Date</th><th className="p-3">Status</th></tr></thead><tbody>{payments.map((payment) => <tr key={payment._id} className="border-b border-white/5"><td className="p-3 text-gray-300">{payment.userEmail || payment.userId}</td><td className="p-3">{payment.plan}</td><td className="p-3">{money(payment.amount)}</td><td className="p-3 text-gray-400">{payment.createdAt ? new Date(payment.createdAt).toLocaleDateString() : "—"}</td><td className="p-3"><span className="rounded-full bg-emerald-400/10 px-2 py-1 text-[10px] text-emerald-300">{payment.status}</span></td></tr>)}</tbody></table></div></section></main>;
 }

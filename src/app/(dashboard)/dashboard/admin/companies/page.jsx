@@ -1,96 +1,18 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { COMPANY_STATUS } from "@/lib/constants";
+import { HiBuildingOffice2, HiCheckCircle, HiClock, HiNoSymbol } from "react-icons/hi2";
 import toast from "react-hot-toast";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5050/api";
-
 export default function AdminCompaniesPage() {
-  const [companies, setCompanies] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const getToken = async () => {
-    const { data } = await authClient.getSession();
-    return data?.session?.token;
-  };
-
-  const load = useCallback(async () => {
-    try {
-      setLoading(true);
-      const token = await getToken();
-      const res = await fetch(`${API}/admin/companies`, {
-        headers: { Authorization: `Bearer ${token}` },
-        credentials: "include",
-      });
-      const json = await res.json();
-      if (res.ok) setCompanies(json.data || []);
-    } catch {
-      toast.error("Failed to load companies");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
-
-  const setStatus = async (id, status) => {
-    try {
-      const token = await getToken();
-      await fetch(`${API}/admin/companies/${id}/status`, {
-        method: "PATCH",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ status }),
-      });
-      toast.success(`Company ${status}`);
-      load();
-    } catch {
-      toast.error("Failed to update");
-    }
-  };
-
-  return (
-    <div className="space-y-6">
-      <h1 className="text-xl font-bold text-white">Manage Companies</h1>
-      <div className="rounded-2xl border border-white/10 bg-[#0b0b0f]/80 overflow-hidden">
-        <table className="w-full text-left text-xs">
-          <thead>
-            <tr className="border-b border-white/10 text-gray-400 uppercase text-[11px]">
-              <th className="py-3 px-5">Name</th>
-              <th className="py-3 px-5">Industry</th>
-              <th className="py-3 px-5">Status</th>
-              <th className="py-3 px-5 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/5">
-            {loading ? (
-              <tr><td colSpan={4} className="py-10 text-center text-gray-500">Loading...</td></tr>
-            ) : companies.length === 0 ? (
-              <tr><td colSpan={4} className="py-10 text-center text-gray-500">No companies</td></tr>
-            ) : (
-              companies.map((c) => (
-                <tr key={c._id} className="hover:bg-white/2">
-                  <td className="py-3 px-5 text-white font-medium">{c.name}</td>
-                  <td className="py-3 px-5 text-gray-400">{c.industry || "—"}</td>
-                  <td className="py-3 px-5 text-gray-300">{c.status || "Pending"}</td>
-                  <td className="py-3 px-5 text-right space-x-2">
-                    {c.status !== COMPANY_STATUS.APPROVED && (
-                      <button onClick={() => setStatus(c._id, COMPANY_STATUS.APPROVED)}
-                        className="px-3 py-1 rounded-lg text-[11px] border border-emerald-500/30 text-emerald-400 cursor-pointer">Approve</button>
-                    )}
-                    {c.status !== COMPANY_STATUS.REJECTED && (
-                      <button onClick={() => setStatus(c._id, COMPANY_STATUS.REJECTED)}
-                        className="px-3 py-1 rounded-lg text-[11px] border border-red-500/30 text-red-400 cursor-pointer">Reject</button>
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+  const [companies, setCompanies] = useState([]); const [query, setQuery] = useState(""); const [status, setStatusFilter] = useState("all"); const [loading, setLoading] = useState(true);
+  const load = async () => { setLoading(true); try { const token = (await authClient.getSession()).data?.session?.token; const res = await fetch(`${API}/admin/companies`, { headers: { Authorization: `Bearer ${token}` }, credentials: "include" }); const json = await res.json(); if (!res.ok) throw new Error(json.message); setCompanies(json.data || []); } catch (e) { toast.error(e.message || "Failed to load companies"); } finally { setLoading(false); } };
+  useEffect(() => { load(); }, []);
+  const filtered = useMemo(() => companies.filter((c) => (!query || `${c.name} ${c.industry} ${c.recruiterEmail}`.toLowerCase().includes(query.toLowerCase())) && (status === "all" || String(c.status).toLowerCase() === status)), [companies, query, status]);
+  const changeStatus = async (id, next) => { try { const token = (await authClient.getSession()).data?.session?.token; const res = await fetch(`${API}/admin/companies/${id}/status`, { method: "PATCH", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ status: next }) }); const json = await res.json(); if (!res.ok) throw new Error(json.message); toast.success(`Company ${next.toLowerCase()}`); load(); } catch (e) { toast.error(e.message || "Unable to update company"); } };
+  const cards = [["Pending Review", companies.filter((c) => c.status === COMPANY_STATUS.PENDING).length, HiClock], ["Approved Partners", companies.filter((c) => c.status === COMPANY_STATUS.APPROVED).length, HiCheckCircle], ["Total Rejections", companies.filter((c) => c.status === COMPANY_STATUS.REJECTED).length, HiNoSymbol]];
+  return <main className="space-y-7 text-white"><div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs uppercase tracking-[.22em] text-indigo-400">Admin Console</p><h1 className="mt-2 text-3xl font-bold">Company Registrations</h1><p className="mt-1 text-sm text-gray-400">Review and manage corporate access requests.</p></div><button className="rounded-xl bg-white px-4 py-2 text-xs font-semibold text-black">+ Register New</button></div><div className="grid gap-4 md:grid-cols-3">{cards.map(([label, value, Icon]) => <div key={label} className="rounded-2xl border border-white/10 bg-[#151519] p-5"><div className="flex justify-between text-gray-400"><span className="text-[11px] uppercase">{label}</span><Icon className="text-lg text-indigo-400" /></div><p className="mt-3 text-2xl font-bold">{value}</p></div>)}</div><div className="flex flex-wrap gap-3 rounded-2xl border border-white/10 bg-[#151519] p-4"><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search companies, recruiters, or industries…" className="min-w-[250px] flex-1 rounded-xl border border-white/10 bg-white/[.04] px-4 py-2.5 text-sm text-white outline-none" /><select value={status} onChange={(e) => setStatusFilter(e.target.value)} className="rounded-xl border border-white/10 bg-[#111118] px-4 py-2.5 text-sm text-white"><option value="all">All Statuses</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></div><div className="overflow-x-auto rounded-2xl border border-white/10 bg-[#151519]"><table className="w-full min-w-[900px] text-left text-xs"><thead className="border-b border-white/10 text-[10px] uppercase text-gray-500"><tr><th className="p-4">Company Name</th><th className="p-4">Recruiter Email</th><th className="p-4">Industry</th><th className="p-4">Status</th><th className="p-4">Date Submitted</th><th className="p-4 text-right">Actions</th></tr></thead><tbody>{loading ? <tr><td className="p-8 text-center" colSpan="6">Loading…</td></tr> : filtered.map((company) => <tr key={company._id} className="border-b border-white/5"><td className="p-4 font-medium"><span className="mr-2 inline-flex h-7 w-7 items-center justify-center rounded bg-white/10"><HiBuildingOffice2 /></span>{company.name}</td><td className="p-4 text-gray-400">{company.recruiterEmail || company.email || "—"}</td><td className="p-4 text-gray-400">{company.industry || "Other"}</td><td className="p-4"><span className="rounded-full bg-white/5 px-2 py-1 text-[10px]">{company.status || "Pending"}</span></td><td className="p-4 text-gray-400">{company.createdAt ? new Date(company.createdAt).toLocaleDateString() : "—"}</td><td className="p-4 text-right">{company.status !== COMPANY_STATUS.APPROVED && <button onClick={() => changeStatus(company._id, COMPANY_STATUS.APPROVED)} className="mr-3 text-[10px] text-emerald-300">Approve</button>}{company.status !== COMPANY_STATUS.REJECTED && <button onClick={() => changeStatus(company._id, COMPANY_STATUS.REJECTED)} className="text-[10px] text-red-300">Reject</button>}</td></tr>)}</tbody></table></div></main>;
 }

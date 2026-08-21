@@ -1,90 +1,20 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
+import { HiBriefcase, HiChartBar, HiClock, HiDocumentText } from "react-icons/hi2";
 import toast from "react-hot-toast";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5050/api";
-
 export default function AdminJobsPage() {
-  const [jobs, setJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const getToken = async () => {
-    const { data } = await authClient.getSession();
-    return data?.session?.token;
-  };
-
-  const load = useCallback(async () => {
-    try {
-      setLoading(true);
-      const token = await getToken();
-      const res = await fetch(`${API}/admin/jobs`, {
-        headers: { Authorization: `Bearer ${token}` },
-        credentials: "include",
-      });
-      const json = await res.json();
-      if (res.ok) setJobs(json.data || []);
-    } catch {
-      toast.error("Failed to load jobs");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
-
-  const closeJob = async (id) => {
-    try {
-      const token = await getToken();
-      await fetch(`${API}/admin/jobs/${id}/close`, {
-        method: "PATCH",
-        headers: { Authorization: `Bearer ${token}` },
-        credentials: "include",
-      });
-      toast.success("Job closed");
-      load();
-    } catch {
-      toast.error("Failed");
-    }
-  };
-
-  return (
-    <div className="space-y-6">
-      <h1 className="text-xl font-bold text-white">Manage Jobs</h1>
-      <div className="rounded-2xl border border-white/10 bg-[#0b0b0f]/80 overflow-hidden">
-        <table className="w-full text-left text-xs">
-          <thead>
-            <tr className="border-b border-white/10 text-gray-400 uppercase text-[11px]">
-              <th className="py-3 px-5">Title</th>
-              <th className="py-3 px-5">Status</th>
-              <th className="py-3 px-5">Location</th>
-              <th className="py-3 px-5 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/5">
-            {loading ? (
-              <tr><td colSpan={4} className="py-10 text-center text-gray-500">Loading...</td></tr>
-            ) : jobs.length === 0 ? (
-              <tr><td colSpan={4} className="py-10 text-center text-gray-500">No jobs</td></tr>
-            ) : (
-              jobs.map((j) => (
-                <tr key={j._id} className="hover:bg-white/2">
-                  <td className="py-3 px-5 text-white font-medium">{j.title}</td>
-                  <td className="py-3 px-5 text-gray-300 capitalize">{j.status}</td>
-                  <td className="py-3 px-5 text-gray-400">{j.location || "—"}</td>
-                  <td className="py-3 px-5 text-right">
-                    {j.status === "active" && (
-                      <button onClick={() => closeJob(j._id)}
-                        className="px-3 py-1 rounded-lg text-[11px] border border-amber-500/30 text-amber-400 cursor-pointer">Force Close</button>
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+  const [jobs, setJobs] = useState([]); const [query, setQuery] = useState(""); const [status, setStatus] = useState("all"); const [category, setCategory] = useState("all"); const [loading, setLoading] = useState(true);
+  const getToken = async () => (await authClient.getSession()).data?.session?.token;
+  const load = async () => { try { setLoading(true); const res = await fetch(`${API}/admin/jobs`, { headers: { Authorization: `Bearer ${await getToken()}` }, credentials: "include" }); const json = await res.json(); if (!res.ok) throw new Error(json.message); setJobs(json.data || []); } catch (e) { toast.error(e.message || "Failed to load jobs"); } finally { setLoading(false); } };
+  useEffect(() => { load(); }, []);
+  const filtered = useMemo(() => jobs.filter((j) => (!query || `${j.title} ${j.companyName}`.toLowerCase().includes(query.toLowerCase())) && (status === "all" || j.status === status) && (category === "all" || j.category === category)), [jobs, query, status, category]);
+  const categories = [...new Set(jobs.map((j) => j.category).filter(Boolean))];
+  const moderate = async (id, action) => { try { const endpoint = action === "delete" ? `${API}/admin/jobs/${id}` : `${API}/admin/jobs/${id}/${action}`; const res = await fetch(endpoint, { method: action === "delete" ? "DELETE" : "PATCH", headers: { Authorization: `Bearer ${await getToken()}` }, credentials: "include" }); const json = await res.json(); if (!res.ok) throw new Error(json.message); toast.success(json.message || "Updated"); load(); } catch (e) { toast.error(e.message || "Action failed"); } };
+  const cards = [["Active Jobs", jobs.filter((j) => j.status === "active").length, HiBriefcase], ["Closed Jobs", jobs.filter((j) => j.status === "closed").length, HiClock], ["Total Applications", jobs.reduce((n, j) => n + Number(j.applicantsCount || 0), 0), HiDocumentText], ["Visible Results", filtered.length, HiChartBar]];
+  return <main className="space-y-7 text-white"><div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs uppercase tracking-[.22em] text-indigo-400">Admin Console</p><h1 className="mt-2 text-3xl font-bold">Manage Jobs</h1><p className="mt-1 text-sm text-gray-400">Oversee all active listings and historical job posts.</p></div><Link href="/dashboard/recruiter/jobs/new" className="rounded-xl bg-white px-4 py-2 text-xs font-semibold text-black">+ Create Job</Link></div><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{cards.map(([label, value, Icon]) => <div key={label} className="rounded-2xl border border-white/10 bg-[#151519] p-5"><div className="flex justify-between text-gray-400"><span className="text-[11px]">{label}</span><Icon className="text-lg text-indigo-400" /></div><p className="mt-3 text-2xl font-bold">{value}</p></div>)}</div><div className="flex flex-wrap gap-3 rounded-2xl border border-white/10 bg-[#151519] p-4"><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by job title or company…" className="min-w-[240px] flex-1 rounded-xl border border-white/10 bg-white/[.04] px-4 py-2.5 text-sm text-white outline-none" /><select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-xl border border-white/10 bg-[#111118] px-4 py-2.5 text-sm text-white"><option value="all">All Statuses</option><option value="active">Active</option><option value="closed">Closed</option><option value="draft">Draft</option></select><select value={category} onChange={(e) => setCategory(e.target.value)} className="rounded-xl border border-white/10 bg-[#111118] px-4 py-2.5 text-sm text-white"><option value="all">All Categories</option>{categories.map((item) => <option key={item}>{item}</option>)}</select></div><div className="overflow-x-auto rounded-2xl border border-white/10 bg-[#151519]"><table className="w-full min-w-[1000px] text-left text-xs"><thead className="border-b border-white/10 text-[10px] uppercase text-gray-500"><tr><th className="p-4">Title</th><th className="p-4">Company</th><th className="p-4">Category</th><th className="p-4">Type</th><th className="p-4">Date Posted</th><th className="p-4">Status</th><th className="p-4 text-right">Actions</th></tr></thead><tbody>{loading ? <tr><td className="p-8 text-center" colSpan="7">Loading…</td></tr> : filtered.map((job) => <tr key={job._id} className="border-b border-white/5"><td className="p-4 font-medium"><Link href={`/jobs/${job._id}`} className="hover:text-cyan-300">{job.title || "Untitled"}</Link><div className="text-[10px] text-gray-500">Ref: {String(job._id).slice(-8)}</div></td><td className="p-4 text-gray-300">{job.companyName || "—"}</td><td className="p-4 text-gray-400">{job.category || "Other"}</td><td className="p-4 text-gray-400">{job.jobType || "—"}</td><td className="p-4 text-gray-400">{job.createdAt ? new Date(job.createdAt).toLocaleDateString() : "—"}</td><td className="p-4"><span className={`rounded-full px-2 py-1 text-[10px] ${job.status === "active" ? "bg-emerald-400/10 text-emerald-300" : "bg-white/10 text-gray-300"}`}>{job.status}</span></td><td className="p-4 text-right"><Link href={`/jobs/${job._id}`} className="mr-3 text-[10px] text-cyan-300">View</Link><button onClick={() => moderate(job._id, job.status === "active" ? "close" : "delete")} className="text-[10px] text-red-300">{job.status === "active" ? "Close" : "Remove"}</button></td></tr>)}</tbody></table></div></main>;
 }

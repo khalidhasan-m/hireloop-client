@@ -2,45 +2,8 @@
 
 import React from "react";
 import Link from "next/link";
-import { HiBars3, HiBell, HiHome } from "react-icons/hi2";
+import { HiBars3, HiBell, HiHome, HiMagnifyingGlass, HiEnvelope } from "react-icons/hi2";
 
 export default function DashboardHeader({ user, setMobileSidebarOpen }) {
-  return (
-    <header className="sticky top-0 z-20 h-16 flex items-center justify-between px-4 sm:px-8 border-b border-white/10 bg-[#030305]/80 backdrop-blur-xl">
-      {/* Left: mobile menu + breadcrumb */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => setMobileSidebarOpen?.(true)}
-          className="lg:hidden p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition cursor-pointer"
-        >
-          <HiBars3 className="text-xl" />
-        </button>
-
-        <Link
-          href="/"
-          className="hidden sm:flex items-center gap-1.5 text-[11px] text-gray-500 hover:text-gray-300 transition"
-        >
-          <HiHome className="text-sm" />
-          <span>Home</span>
-        </Link>
-      </div>
-
-      {/* Right: notifications + user mini */}
-      <div className="flex items-center gap-3">
-        <button className="relative p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition cursor-pointer">
-          <HiBell className="text-lg" />
-          <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-indigo-500" />
-        </button>
-
-        <div className="hidden sm:flex items-center gap-2 pl-3 border-l border-white/10">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-xs font-bold text-white">
-            {user?.name?.charAt(0)?.toUpperCase() || "U"}
-          </div>
-          <span className="text-xs font-medium text-gray-300 max-w-[120px] truncate">
-            {user?.name || "User"}
-          </span>
-        </div>
-      </div>
-    </header>
-  );
+  return <header className="sticky top-0 z-20 flex min-h-16 items-center justify-between gap-4 border-b border-white/10 bg-[#08080c]/90 px-4 py-3 backdrop-blur-xl sm:px-7"><div className="flex min-w-0 flex-1 items-center gap-3"><button onClick={() => setMobileSidebarOpen?.(true)} className="rounded-xl p-2 text-gray-400 hover:bg-white/5 hover:text-white lg:hidden"><HiBars3 className="text-xl" /></button><Link href="/" className="hidden items-center gap-1.5 text-[11px] text-gray-500 hover:text-gray-300 sm:flex"><HiHome className="text-sm" />Home</Link><label className="hidden max-w-[420px] flex-1 items-center gap-2 rounded-xl border border-white/10 bg-white/[.04] px-3 py-2 text-gray-500 md:flex"><HiMagnifyingGlass /><input aria-label="Global dashboard search" placeholder="Search jobs, companies, or skills..." className="w-full bg-transparent text-xs text-white outline-none placeholder:text-gray-600" /></label></div><div className="flex items-center gap-1.5"><button aria-label="Messages" className="relative rounded-xl p-2 text-gray-400 hover:bg-white/5 hover:text-white"><HiEnvelope className="text-lg" /><span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-emerald-400" /></button><button aria-label="Notifications" className="relative rounded-xl p-2 text-gray-400 hover:bg-white/5 hover:text-white"><HiBell className="text-lg" /><span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-indigo-400" /></button><div className="ml-2 hidden items-center gap-2 border-l border-white/10 pl-3 sm:flex"><div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 text-xs font-bold text-white">{user?.image ? <img src={user.image} alt="" className="h-full w-full object-cover" /> : user?.name?.charAt(0)?.toUpperCase() || "U"}</div><span className="max-w-[120px] truncate text-xs font-medium text-gray-300">{user?.name || "User"}</span></div></div></header>;
 }

@@ -83,7 +83,7 @@ export default function Sidebar({
   const sidebarContent = (
     <div className="flex flex-col h-full bg-[#08080c]/95 backdrop-blur-xl border-r border-white/10">
       {/* Logo */}
-      <div className="h-20 flex items-center justify-between px-8 border-b border-white/10">
+      <div className="h-16 flex items-center justify-between px-5 border-b border-white/10">
         <Link
           href="/"
           className="inline-flex items-center text-2xl font-black tracking-tight"
@@ -103,7 +103,7 @@ export default function Sidebar({
       </div>
 
       {/* User card */}
-      <div className="p-4 mx-5 mt-6 rounded-2xl border border-white/10 bg-white/2 flex items-center gap-3">
+      <div className="p-3 mx-3 mt-4 rounded-2xl border border-white/10 bg-white/2 flex items-center gap-3">
         {isPending ? (
           <div className="animate-pulse flex items-center gap-3 w-full">
             <div className="w-10 h-10 rounded-full bg-white/10" />
@@ -141,7 +141,7 @@ export default function Sidebar({
       </div>
 
       {/* Role badge */}
-      <div className="mx-5 mt-3 px-3 py-1.5 rounded-lg bg-white/3 border border-white/10 flex items-center justify-between">
+      <div className="mx-3 mt-3 px-3 py-1.5 rounded-lg bg-white/3 border border-white/10 flex items-center justify-between">
         <span className="text-[10px] font-bold tracking-widest uppercase text-gray-400">
           Role
         </span>
@@ -153,7 +153,7 @@ export default function Sidebar({
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-5 py-6 space-y-1.5 overflow-y-auto">
+      <nav className="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
         {links.map((link) => {
           const Icon = link.icon;
           const active = isActive(link.href);
@@ -192,7 +192,7 @@ export default function Sidebar({
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-72 lg:fixed lg:inset-y-0 z-30">
+      <aside className="hidden lg:flex lg:flex-col lg:w-56 lg:fixed lg:inset-y-0 z-30">
         {sidebarContent}
       </aside>
 
@@ -203,7 +203,7 @@ export default function Sidebar({
             className="fixed inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="relative w-72 max-w-[85vw] h-full z-50 shadow-2xl">
+          <aside className="relative w-56 max-w-[85vw] h-full z-50 shadow-2xl">
             {sidebarContent}
           </aside>
         </div>
