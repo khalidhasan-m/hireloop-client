@@ -1,265 +1,204 @@
 "use client";
 
-import React, { useState } from "react";
-import Image from "next/image";
-import {
-  HiMagnifyingGlass,
-  HiFunnel,
-  HiEnvelope,
-  HiPhone,
-  HiDocumentText,
-  HiCheckCircle,
-  HiEllipsisVertical,
-} from "react-icons/hi2";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
+import { api } from "@/lib/api";
+import { APPLICATION_STATUS_FLOW } from "@/lib/constants";
+import { HiMagnifyingGlass, HiFunnel } from "react-icons/hi2";
+import toast from "react-hot-toast";
 
-const DEMO_AVATAR =
-  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop";
+const STATUS_STYLES = {
+  Applied: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
+  "Under Review": "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  Shortlisted: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+  Rejected: "bg-red-500/10 text-red-400 border-red-500/20",
+  Offered: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+};
+
+function formatDate(date) {
+  if (!date) return "—";
+  return new Date(date).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
 
 export default function RecruiterApplicationsPage() {
+  const searchParams = useSearchParams();
+  const jobIdFilter = searchParams.get("jobId");
+
+  const [loading, setLoading] = useState(true);
+  const [applications, setApplications] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [updatingId, setUpdatingId] = useState(null);
 
-  // Mock candidates applications state
-  const [applications, setApplications] = useState([
-    {
-      id: 1,
-      name: "Julianne Moore",
-      role: "Senior Product Designer",
-      email: "julianne.m@example.com",
-      phone: "+1 (555) 382-9102",
-      appliedDate: "Oct 24, 2026",
-      experience: "6 years",
-      status: "Interviewing",
-    },
-    {
-      id: 2,
-      name: "Robert Downey",
-      role: "Backend Engineer",
-      email: "rdowney@example.com",
-      phone: "+1 (555) 491-2834",
-      appliedDate: "Oct 23, 2026",
-      experience: "4 years",
-      status: "New",
-    },
-    {
-      id: 3,
-      name: "Emma Stone",
-      role: "Marketing Lead",
-      email: "emma.stone@example.com",
-      phone: "+1 (555) 839-2041",
-      appliedDate: "Oct 22, 2026",
-      experience: "8 years",
-      status: "Reviewing",
-    },
-    {
-      id: 4,
-      name: "Chris Pratt",
-      role: "Product Manager",
-      email: "cpratt@example.com",
-      phone: "+1 (555) 192-8374",
-      appliedDate: "Oct 21, 2026",
-      experience: "5 years",
-      status: "Rejected",
-    },
-    {
-      id: 5,
-      name: "Sarah Jenkins",
-      role: "Senior Full Stack Engineer",
-      email: "sarah.j@example.com",
-      phone: "+1 (555) 923-4810",
-      appliedDate: "Oct 20, 2026",
-      experience: "7 years",
-      status: "Interviewing",
-    },
-  ]);
-
-  const statuses = ["All", "New", "Reviewing", "Interviewing", "Rejected"];
-
-  // Filter candidates based on status and search query
-  const filteredApplications = applications.filter((app) => {
-    const matchesStatus = statusFilter === "All" || app.status === statusFilter;
-    const matchesSearch =
-      app.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      app.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      app.email.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesStatus && matchesSearch;
-  });
-
-  const handleStatusChange = (id, newStatus) => {
-    setApplications((prev) =>
-      prev.map((app) => (app.id === id ? { ...app, status: newStatus } : app)),
-    );
+  const getToken = async () => {
+    const { data } = await authClient.getSession();
+    return data?.session?.token || null;
   };
 
-  const getStatusBadgeStyle = (status) => {
-    switch (status) {
-      case "Interviewing":
-        return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
-      case "Reviewing":
-        return "bg-amber-500/10 text-amber-400 border-amber-500/20";
-      case "New":
-        return "bg-indigo-500/10 text-indigo-400 border-indigo-500/20";
-      case "Rejected":
-        return "bg-red-500/10 text-red-400 border-red-500/20";
-      default:
-        return "bg-gray-500/10 text-gray-400 border-gray-500/20";
+  const load = useCallback(async () => {
+    try {
+      setLoading(true);
+      const token = await getToken();
+      if (!token) return;
+
+      const jobsRes = await api.getMyJobs(token).catch(() => ({ data: [] }));
+      const myJobs = jobsRes?.data || [];
+
+      const targetJobs = jobIdFilter
+        ? myJobs.filter((j) => j._id === jobIdFilter)
+        : myJobs;
+
+      const results = await Promise.all(
+        targetJobs.map((job) =>
+          api.getJobApplications(job._id, token).catch(() => ({ data: [] })),
+        ),
+      );
+
+      const all = [];
+      results.forEach((res, idx) => {
+        const job = targetJobs[idx];
+        (res?.data || []).forEach((app) => {
+          all.push({
+            ...app,
+            jobTitle: job?.title || app.jobTitle || "Unknown Role",
+            jobId: job?._id || app.jobId,
+          });
+        });
+      });
+
+      all.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setApplications(all);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load applications");
+    } finally {
+      setLoading(false);
+    }
+  }, [jobIdFilter]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const handleStatusChange = async (appId, newStatus) => {
+    try {
+      setUpdatingId(appId);
+      const token = await getToken();
+      await api.updateApplicationStatus(appId, newStatus, token);
+      setApplications((prev) =>
+        prev.map((a) => (a._id === appId ? { ...a, status: newStatus } : a)),
+      );
+      toast.success(`Status updated to ${newStatus}`);
+    } catch (err) {
+      toast.error(err.message || "Failed to update status");
+    } finally {
+      setUpdatingId(null);
     }
   };
 
+  const filtered = useMemo(() => {
+    return applications.filter((app) => {
+      const status = app.status || "Applied";
+      if (statusFilter !== "All" && status !== statusFilter) return false;
+      if (!searchQuery) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        (app.candidateName || "").toLowerCase().includes(q) ||
+        (app.candidateEmail || "").toLowerCase().includes(q) ||
+        (app.jobTitle || "").toLowerCase().includes(q)
+      );
+    });
+  }, [applications, searchQuery, statusFilter]);
+
+  const statusOptions = ["All", ...APPLICATION_STATUS_FLOW];
+
   return (
-    <div className="space-y-6 pb-16">
-      {/* Header */}
+    <div className="space-y-6 pb-12">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-          Talent Pipeline & Applications
-        </h1>
-        <p className="text-xs sm:text-sm text-gray-400 mt-1">
-          Review, screen, and advance candidates across your active job
-          openings.
+        <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Applications</h1>
+        <p className="text-xs text-gray-400 mt-0.5">
+          Review and manage candidates who applied to your jobs.
+          {jobIdFilter && <span className="text-indigo-400"> (filtered by job)</span>}
         </p>
       </div>
 
-      {/* Filter Tabs & Search Bar */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        {/* Status Filter Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0">
-          {statuses.map((status) => (
-            <button
-              key={status}
-              onClick={() => setStatusFilter(status)}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
-                statusFilter === status
-                  ? "bg-white text-black shadow-lg"
-                  : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border border-white/5"
-              }`}
-            >
-              {status}
-            </button>
-          ))}
-        </div>
-
-        {/* Search Bar */}
-        <div className="relative w-full lg:w-80">
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1 max-w-md">
           <HiMagnifyingGlass className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-sm" />
           <input
             type="text"
-            placeholder="Search candidate name or role..."
+            placeholder="Search by name, email, or role..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full h-10 pl-10 pr-4 rounded-xl bg-[#0b0b0f] border border-white/10 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition"
           />
         </div>
+        <div className="flex items-center gap-2">
+          <HiFunnel className="text-gray-500 text-sm" />
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="h-10 px-3 rounded-xl bg-[#0b0b0f] border border-white/10 text-xs text-white focus:outline-none"
+          >
+            {statusOptions.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      {/* Applications Table */}
-      <div className="rounded-3xl border border-white/10 bg-[#0b0b0f]/80 backdrop-blur-xl overflow-hidden shadow-2xl">
+      <div className="rounded-2xl border border-white/10 bg-[#0b0b0f]/80 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-white/10 text-[11px] font-semibold text-gray-400 uppercase tracking-wider bg-white/2">
-                <th className="py-4 px-6">Candidate</th>
-                <th className="py-4 px-6">Applied Role</th>
-                <th className="py-4 px-6">Experience</th>
-                <th className="py-4 px-6">Applied Date</th>
-                <th className="py-4 px-6">Status</th>
-                <th className="py-4 px-6 text-right">Actions / Update</th>
+              <tr className="border-b border-white/10 text-[11px] text-gray-400 uppercase tracking-wider">
+                <th className="py-3.5 px-5 font-semibold">Candidate</th>
+                <th className="py-3.5 px-5 font-semibold">Role</th>
+                <th className="py-3.5 px-5 font-semibold">Applied</th>
+                <th className="py-3.5 px-5 font-semibold">Status</th>
+                <th className="py-3.5 px-5 font-semibold text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5 text-xs">
-              {filteredApplications.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="py-12 text-center text-gray-500 text-xs"
-                  >
-                    No applications found matching your criteria.
-                  </td>
-                </tr>
+            <tbody className="divide-y divide-white/5">
+              {loading ? (
+                <tr><td colSpan={5} className="py-12 text-center text-gray-500 animate-pulse">Loading...</td></tr>
+              ) : filtered.length === 0 ? (
+                <tr><td colSpan={5} className="py-12 text-center text-gray-500">No applications found.</td></tr>
               ) : (
-                filteredApplications.map((app) => (
-                  <tr
-                    key={app.id}
-                    className="hover:bg-white/2 transition group"
-                  >
-                    {/* Candidate Info */}
-                    <td className="py-4 px-6">
-                      <div className="flex items-center gap-3">
-                        <div className="relative w-9 h-9 rounded-full overflow-hidden border border-white/10 bg-linear-to-tr from-indigo-500 to-purple-500 shrink-0">
-                          <Image
-                            src={DEMO_AVATAR}
-                            alt={app.name}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                        <div>
-                          <p className="font-bold text-white group-hover:text-indigo-400 transition">
-                            {app.name}
-                          </p>
-                          <p className="text-[10px] text-gray-500">
-                            {app.email}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Role */}
-                    <td className="py-4 px-6 text-gray-300 font-medium">
-                      {app.role}
-                    </td>
-
-                    {/* Experience */}
-                    <td className="py-4 px-6 text-gray-300">
-                      {app.experience}
-                    </td>
-
-                    {/* Date */}
-                    <td className="py-4 px-6 text-gray-400 font-mono text-[11px]">
-                      {app.appliedDate}
-                    </td>
-
-                    {/* Status Badge */}
-                    <td className="py-4 px-6">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border ${getStatusBadgeStyle(
-                          app.status,
-                        )}`}
-                      >
-                        {app.status}
-                      </span>
-                    </td>
-
-                    {/* Actions & Status Changer */}
-                    <td className="py-4 px-6 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                filtered.map((app) => {
+                  const status = app.status || "Applied";
+                  const style = STATUS_STYLES[status] || "bg-white/10 text-gray-300 border-white/20";
+                  return (
+                    <tr key={app._id} className="hover:bg-white/2 transition">
+                      <td className="py-4 px-5">
+                        <p className="font-semibold text-white">{app.candidateName || "Candidate"}</p>
+                        <p className="text-[10px] text-gray-500 mt-0.5">{app.candidateEmail || "—"}</p>
+                      </td>
+                      <td className="py-4 px-5 text-gray-300">{app.jobTitle}</td>
+                      <td className="py-4 px-5 text-gray-400">{formatDate(app.createdAt)}</td>
+                      <td className="py-4 px-5">
+                        <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${style}`}>{status}</span>
+                      </td>
+                      <td className="py-4 px-5 text-right">
                         <select
-                          value={app.status}
-                          onChange={(e) =>
-                            handleStatusChange(app.id, e.target.value)
-                          }
-                          className="h-9 px-3 rounded-xl bg-[#121218] border border-white/10 text-[11px] text-white focus:outline-none focus:border-indigo-500 transition cursor-pointer"
+                          value={status}
+                          disabled={updatingId === app._id}
+                          onChange={(e) => handleStatusChange(app._id, e.target.value)}
+                          className="h-8 px-2 rounded-lg bg-[#08080c] border border-white/10 text-[11px] text-white focus:outline-none disabled:opacity-50 cursor-pointer"
                         >
-                          <option value="New">Set: New</option>
-                          <option value="Reviewing">Set: Reviewing</option>
-                          <option value="Interviewing">
-                            Set: Interviewing
-                          </option>
-                          <option value="Rejected">Set: Rejected</option>
+                          {APPLICATION_STATUS_FLOW.map((s) => (
+                            <option key={s} value={s}>{s}</option>
+                          ))}
                         </select>
-
-                        <button
-                          onClick={() =>
-                            alert(`Opening resume for ${app.name}`)
-                          }
-                          className="p-2 rounded-xl bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition border border-white/10 cursor-pointer"
-                          title="View Resume"
-                        >
-                          <HiDocumentText className="text-sm" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
