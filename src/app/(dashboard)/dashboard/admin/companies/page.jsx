@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { COMPANY_STATUS } from "@/lib/constants";
 import { HiBuildingOffice2, HiCheckCircle, HiClock, HiNoSymbol, HiFunnel, HiPlus } from "react-icons/hi2";
@@ -16,8 +17,8 @@ const statusStyle = {
 };
 
 export default function AdminCompaniesPage() {
+  const searchParams = useSearchParams();
   const [companies, setCompanies] = useState([]);
-  const [query, setQuery] = useState("");
   const [status, setStatus] = useState("all");
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -39,8 +40,9 @@ export default function AdminCompaniesPage() {
 
   const filtered = useMemo(() => companies.filter((company) => {
     const text = `${company.name || ""} ${company.industry || ""} ${company.recruiterEmail || company.email || ""}`.toLowerCase();
+    const query = searchParams.get("q") || "";
     return (!query || text.includes(query.toLowerCase())) && (status === "all" || String(company.status).toLowerCase() === status);
-  }), [companies, query, status]);
+  }), [companies, searchParams, status]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -64,7 +66,6 @@ export default function AdminCompaniesPage() {
   };
 
   const selectStatus = (value) => { setStatus(value); setPage(1); };
-  const selectQuery = (value) => { setQuery(value); setPage(1); };
 
   return <main className="min-w-0 space-y-7 text-white">
     <div className="flex flex-wrap items-end justify-between gap-4">
@@ -73,7 +74,6 @@ export default function AdminCompaniesPage() {
     </div>
 
     <div className="flex flex-wrap items-center justify-end gap-3">
-      <label className="flex min-w-[220px] flex-1 items-center rounded-lg border border-white/10 bg-[#151519] px-3 py-2"><input value={query} onChange={(event) => selectQuery(event.target.value)} placeholder="Search companies, recruiters, or industries..." className="w-full bg-transparent text-xs text-white outline-none placeholder:text-gray-600" /></label>
       <label className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-[#151519] px-3 py-2 text-xs text-gray-300"><HiFunnel className="text-gray-500" /><select value={status} onChange={(event) => selectStatus(event.target.value)} className="bg-transparent outline-none"><option value="all">All Statuses</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></label>
     </div>
 
