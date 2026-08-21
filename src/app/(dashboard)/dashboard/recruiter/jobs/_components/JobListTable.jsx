@@ -1,23 +1,19 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
-import { HiEye, HiPencilSquare, HiTrash } from "react-icons/hi2";
-
-const DEMO_AVATAR =
-  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop";
+import { HiEye, HiTrash, HiLockClosed, HiLockOpen } from "react-icons/hi2";
 
 export function JobListTable({
   jobs,
   onViewApplicants,
-  onEditJob,
   onDeleteJob,
+  onCloseJob,
+  onReopenJob,
 }) {
   if (!jobs || jobs.length === 0) {
     return (
       <div className="rounded-3xl border border-white/10 bg-[#0b0b0f]/85 backdrop-blur-xl p-12 text-center text-gray-400 text-xs shadow-2xl">
-        No jobs found. Click &quot;Post New Job&quot; above to create your first
-        listing!
+        No jobs found. Click &quot;Post New Job&quot; above to create your first listing!
       </div>
     );
   }
@@ -30,101 +26,86 @@ export function JobListTable({
             <tr className="border-b border-white/10 text-[11px] font-semibold text-gray-400 uppercase tracking-wider bg-white/2">
               <th className="py-4 px-6">Job Title & Role</th>
               <th className="py-4 px-6">Location</th>
-              <th className="py-4 px-6">Applicants</th>
               <th className="py-4 px-6">Salary Range</th>
               <th className="py-4 px-6">Status</th>
               <th className="py-4 px-6 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5 text-xs">
-            {jobs.map((job) => (
-              <tr
-                key={job._id || job.title}
-                className="hover:bg-white/2 transition group"
-              >
-                {/* Title & Category */}
-                <td className="py-4 px-6">
-                  <p className="font-bold text-white group-hover:text-indigo-400 transition">
-                    {job.title}
-                  </p>
-                  <p className="text-[10px] text-gray-500">
-                    {job.category || job.jobType || "Engineering • Full-time"}
-                  </p>
-                </td>
-
-                {/* Location */}
-                <td className="py-4 px-6 text-gray-300 font-medium">
-                  {job.location || "Remote"}
-                </td>
-
-                {/* Applicants Count + Avatars */}
-                <td className="py-4 px-6">
-                  <div className="flex items-center gap-2">
-                    <div className="flex -space-x-1.5 overflow-hidden">
-                      <div className="relative w-5 h-5 rounded-full border border-black overflow-hidden">
-                        <Image
-                          src={DEMO_AVATAR}
-                          alt="Applicant"
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                    </div>
-                    <span className="text-gray-300 font-semibold">
-                      {job.applicantsCount || 0}
+            {jobs.map((job) => {
+              const isActive = (job.status || "active").toLowerCase() === "active";
+              return (
+                <tr key={job._id} className="hover:bg-white/2 transition group">
+                  <td className="py-4 px-6">
+                    <p className="font-bold text-white group-hover:text-indigo-400 transition">
+                      {job.title}
+                    </p>
+                    <p className="text-[10px] text-gray-500">
+                      {job.category || job.jobType || "—"}
+                    </p>
+                  </td>
+                  <td className="py-4 px-6 text-gray-300 font-medium">
+                    {job.location || "Remote"}
+                  </td>
+                  <td className="py-4 px-6 text-gray-300 font-mono text-[11px]">
+                    {job.salaryRange ||
+                      (job.salaryMin != null
+                        ? `$${job.salaryMin}k - $${job.salaryMax || "?"}k`
+                        : "Competitive")}
+                  </td>
+                  <td className="py-4 px-6">
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border ${
+                        isActive
+                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                          : "bg-gray-500/10 text-gray-400 border-gray-500/20"
+                      }`}
+                    >
+                      {isActive ? "Active" : "Closed"}
                     </span>
-                  </div>
-                </td>
-
-                {/* Salary */}
-                <td className="py-4 px-6 text-gray-300 font-mono text-[11px]">
-                  {job.salaryRange || job.salary || "Competitive"}
-                </td>
-
-                {/* Status Badge */}
-                <td className="py-4 px-6">
-                  <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border ${
-                      (job.status || "Active") === "Active"
-                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                        : "bg-gray-500/10 text-gray-400 border-gray-500/20"
-                    }`}
-                  >
-                    {job.status || "Active"}
-                  </span>
-                </td>
-
-                {/* Actions */}
-                <td className="py-4 px-6 text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <button
-                      type="button"
-                      onClick={() => onViewApplicants?.(job)}
-                      className="p-2 rounded-xl bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition border border-white/10 cursor-pointer"
-                      title="View Applicants"
-                    >
-                      <HiEye className="text-sm" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onEditJob?.(job)}
-                      className="p-2 rounded-xl bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition border border-white/10 cursor-pointer"
-                      title="Edit Job"
-                    >
-                      <HiPencilSquare className="text-sm" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onDeleteJob?.(job)}
-                      className="p-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition border border-red-500/20 cursor-pointer"
-                      title="Delete Job"
-                    >
-                      <HiTrash className="text-sm" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td className="py-4 px-6 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => onViewApplicants?.(job)}
+                        className="p-2 rounded-xl bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition border border-white/10 cursor-pointer"
+                        title="View Applicants"
+                      >
+                        <HiEye className="text-sm" />
+                      </button>
+                      {isActive ? (
+                        <button
+                          type="button"
+                          onClick={() => onCloseJob?.(job)}
+                          className="p-2 rounded-xl bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition border border-amber-500/20 cursor-pointer"
+                          title="Close Job"
+                        >
+                          <HiLockClosed className="text-sm" />
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => onReopenJob?.(job)}
+                          className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition border border-emerald-500/20 cursor-pointer"
+                          title="Reopen Job"
+                        >
+                          <HiLockOpen className="text-sm" />
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => onDeleteJob?.(job)}
+                        className="p-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition border border-red-500/20 cursor-pointer"
+                        title="Delete Job"
+                      >
+                        <HiTrash className="text-sm" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
