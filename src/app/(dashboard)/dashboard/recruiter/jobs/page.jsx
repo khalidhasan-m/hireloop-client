@@ -6,6 +6,7 @@ import { CreateJobModal } from "./_components/CreateJobModal";
 import { HiPlus, HiMagnifyingGlass } from "react-icons/hi2";
 import { api } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
+import toast from "react-hot-toast";
 
 export default function RecruiterJobsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -27,44 +28,81 @@ export default function RecruiterJobsPage() {
     }
   };
 
-  // Fetch recruiter's jobs on mount
+  // Standalone fetch function
+  const fetchMyJobs = async () => {
+    try {
+      const token = await getAuthToken();
+      const response = await api.getMyJobs(token);
+      const jobsData =
+        response?.data ||
+        response?.jobs ||
+        (Array.isArray(response) ? response : []);
+      setJobs(jobsData);
+    } catch (error) {
+      console.error("Failed to fetch recruiter jobs:", error);
+      toast.error("Failed to load your job postings.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch jobs on mount safely
   useEffect(() => {
-    async function fetchMyJobs() {
+    let isMounted = true;
+
+    async function loadInitialJobs() {
       try {
         const token = await getAuthToken();
         const response = await api.getMyJobs(token);
-        if (response && response.success) {
-          setJobs(response.data);
+        if (isMounted) {
+          const jobsData =
+            response?.data ||
+            response?.jobs ||
+            (Array.isArray(response) ? response : []);
+          setJobs(jobsData);
         }
       } catch (error) {
         console.error("Failed to fetch recruiter jobs:", error);
+        if (isMounted) toast.error("Failed to load your job postings.");
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     }
-    fetchMyJobs();
+
+    loadInitialJobs();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleCreateJob = async (newJobData) => {
     try {
       const token = await getAuthToken();
-
       const response = await api.createJob(newJobData, token);
-      console.log("Create Job Response:", response);
+      console.log("Create Job Full Response:", response);
 
-      const createdJob = response?.data || response;
+      // Extract the created job object flexibly from any backend structure
+      const createdJob =
+        response?.data ||
+        response?.job ||
+        response?.savedJob ||
+        (typeof response === "object" && response._id ? response : null);
 
-      if (createdJob && response.success !== false) {
-        setJobs([createdJob, ...jobs]);
+      const isSuccess = response?.success !== false && createdJob;
+
+      if (isSuccess) {
+        toast.success("Job posted successfully!");
+        
+        // Instantly prepend the new job to local state so the table updates right away
+        setJobs((prevJobs) => [createdJob, ...prevJobs]);
         setIsModalOpen(false);
       } else {
-        alert(response?.message || "Failed to create job. Check console.");
+        toast.error(response?.message || "Failed to create job.");
       }
     } catch (error) {
       console.error("Failed to create job error:", error);
-      alert(
-        "An error occurred while posting the job. Check console for details.",
-      );
+      toast.error("An error occurred while posting the job.");
     }
   };
 
@@ -72,11 +110,17 @@ export default function RecruiterJobsPage() {
     try {
       const token = await getAuthToken();
       const response = await api.deleteJob(job._id, token);
-      if (response && response.success) {
-        setJobs(jobs.filter((j) => j._id !== job._id));
+      const isSuccess = response?.success !== false;
+
+      if (isSuccess) {
+        setJobs((prevJobs) => prevJobs.filter((j) => j._id !== job._id));
+        toast.success("Job deleted successfully.");
+      } else {
+        toast.error(response?.message || "Failed to delete job.");
       }
     } catch (error) {
       console.error("Failed to delete job:", error);
+      toast.error("An error occurred while deleting the job.");
     }
   };
 

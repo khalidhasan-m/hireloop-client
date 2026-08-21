@@ -15,7 +15,7 @@ export function JobListTable({
 }) {
   if (!jobs || jobs.length === 0) {
     return (
-      <div className="rounded-3xl border border-white/10 bg-[#0b0b0f]/80 backdrop-blur-xl p-12 text-center text-gray-400 text-xs shadow-2xl">
+      <div className="rounded-3xl border border-white/10 bg-[#0b0b0f]/85 backdrop-blur-xl p-12 text-center text-gray-400 text-xs shadow-2xl">
         No jobs found. Click &quot;Post New Job&quot; above to create your first
         listing!
       </div>
@@ -23,7 +23,7 @@ export function JobListTable({
   }
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-[#0b0b0f]/80 backdrop-blur-xl overflow-hidden shadow-2xl">
+    <div className="rounded-3xl border border-white/10 bg-[#0b0b0f]/85 backdrop-blur-xl overflow-hidden shadow-2xl">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
@@ -98,6 +98,7 @@ export function JobListTable({
                 <td className="py-4 px-6 text-right">
                   <div className="flex items-center justify-end gap-2">
                     <button
+                      type="button"
                       onClick={() => onViewApplicants?.(job)}
                       className="p-2 rounded-xl bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition border border-white/10 cursor-pointer"
                       title="View Applicants"
@@ -105,6 +106,7 @@ export function JobListTable({
                       <HiEye className="text-sm" />
                     </button>
                     <button
+                      type="button"
                       onClick={() => onEditJob?.(job)}
                       className="p-2 rounded-xl bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition border border-white/10 cursor-pointer"
                       title="Edit Job"
@@ -112,6 +114,7 @@ export function JobListTable({
                       <HiPencilSquare className="text-sm" />
                     </button>
                     <button
+                      type="button"
                       onClick={() => onDeleteJob?.(job)}
                       className="p-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition border border-red-500/20 cursor-pointer"
                       title="Delete Job"

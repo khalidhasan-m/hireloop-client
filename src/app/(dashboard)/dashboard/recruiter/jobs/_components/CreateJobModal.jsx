@@ -12,6 +12,7 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }) {
     jobType: "Full-time",
     description: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
@@ -20,10 +21,14 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }) {
     setJobData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (onSubmit) onSubmit(jobData);
-    onClose();
+    setIsSubmitting(true);
+    try {
+      await onSubmit(jobData);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -33,7 +38,8 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }) {
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-6 right-6 text-gray-400 hover:text-white transition p-1.5 rounded-full bg-white/5 border border-white/10 cursor-pointer"
+          disabled={isSubmitting}
+          className="absolute top-6 right-6 text-gray-400 hover:text-white transition p-1.5 rounded-full bg-white/5 border border-white/10 cursor-pointer disabled:opacity-50"
         >
           <HiXMark className="text-lg" />
         </button>
@@ -59,10 +65,11 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }) {
               type="text"
               name="title"
               required
+              disabled={isSubmitting}
               placeholder="e.g. Senior Full Stack Engineer"
               value={jobData.title}
               onChange={handleChange}
-              className="w-full h-11 px-4 rounded-xl bg-white/3 border border-white/10 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500 transition"
+              className="w-full h-11 px-4 rounded-xl bg-white/3 border border-white/10 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500 transition disabled:opacity-50"
             />
           </div>
 
@@ -73,9 +80,10 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }) {
               </label>
               <select
                 name="category"
+                disabled={isSubmitting}
                 value={jobData.category}
                 onChange={handleChange}
-                className="w-full h-11 px-4 rounded-xl bg-[#121218] border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500 transition cursor-pointer"
+                className="w-full h-11 px-4 rounded-xl bg-[#121218] border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500 transition cursor-pointer disabled:opacity-50"
               >
                 <option value="Software Engineering">
                   Software Engineering
@@ -95,10 +103,11 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }) {
               <input
                 type="text"
                 name="location"
+                disabled={isSubmitting}
                 placeholder="e.g. SF / Remote"
                 value={jobData.location}
                 onChange={handleChange}
-                className="w-full h-11 px-4 rounded-xl bg-white/3 border border-white/10 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500 transition"
+                className="w-full h-11 px-4 rounded-xl bg-white/3 border border-white/10 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500 transition disabled:opacity-50"
               />
             </div>
           </div>
@@ -111,10 +120,11 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }) {
               <input
                 type="text"
                 name="salaryRange"
+                disabled={isSubmitting}
                 placeholder="e.g. $180k - $240k"
                 value={jobData.salaryRange}
                 onChange={handleChange}
-                className="w-full h-11 px-4 rounded-xl bg-white/3 border border-white/10 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500 transition"
+                className="w-full h-11 px-4 rounded-xl bg-white/3 border border-white/10 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500 transition disabled:opacity-50"
               />
             </div>
 
@@ -124,9 +134,10 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }) {
               </label>
               <select
                 name="jobType"
+                disabled={isSubmitting}
                 value={jobData.jobType}
                 onChange={handleChange}
-                className="w-full h-11 px-4 rounded-xl bg-[#121218] border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500 transition cursor-pointer"
+                className="w-full h-11 px-4 rounded-xl bg-[#121218] border border-white/10 text-xs text-white focus:outline-none focus:border-indigo-500 transition cursor-pointer disabled:opacity-50"
               >
                 <option value="Full-time">Full-time</option>
                 <option value="Contract">Contract</option>
@@ -143,10 +154,11 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }) {
             <textarea
               name="description"
               rows={4}
+              disabled={isSubmitting}
               placeholder="Describe responsibilities, requirements, and tech stack..."
               value={jobData.description}
               onChange={handleChange}
-              className="w-full p-4 rounded-xl bg-white/3 border border-white/10 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500 transition resize-none"
+              className="w-full p-4 rounded-xl bg-white/3 border border-white/10 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500 transition resize-none disabled:opacity-50"
             />
           </div>
 
@@ -155,15 +167,17 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }) {
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-medium text-gray-300 hover:bg-white/10 transition cursor-pointer"
+              disabled={isSubmitting}
+              className="px-6 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-medium text-gray-300 hover:bg-white/10 transition cursor-pointer disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 rounded-xl bg-white text-black text-xs font-bold hover:bg-gray-200 transition shadow-lg cursor-pointer"
+              disabled={isSubmitting}
+              className="px-6 py-2.5 rounded-xl bg-white text-black text-xs font-bold hover:bg-gray-200 transition shadow-lg cursor-pointer disabled:opacity-50"
             >
-              Publish Job Post
+              {isSubmitting ? "Publishing..." : "Publish Job Post"}
             </button>
           </div>
         </form>
