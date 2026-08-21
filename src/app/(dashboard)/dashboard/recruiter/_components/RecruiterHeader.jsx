@@ -163,9 +163,9 @@ export function RecruiterHeader({ user, setMobileSidebarOpen }) {
         <div className="flex items-center gap-3 pl-2 border-l border-white/10">
           <div className="text-right hidden sm:block">
             <p className="text-xs font-semibold text-white">
-              {user?.name || "Alex Sterling"}
+              {user?.name || "User"}
             </p>
-            <p className="text-[10px] text-gray-500">TechFlow Inc.</p>
+            <p className="text-[10px] text-gray-500">{user?.companyName || "Company not linked"}</p>
           </div>
           <div className="w-10 h-10 rounded-full relative overflow-hidden border border-white/10 bg-linear-to-tr from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-sm text-white">
             {user?.image ? (
