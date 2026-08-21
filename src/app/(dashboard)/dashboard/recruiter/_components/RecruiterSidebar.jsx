@@ -88,12 +88,12 @@ export function RecruiterSidebar({
               ) : user?.name ? (
                 user.name.charAt(0).toUpperCase()
               ) : (
-                "A"
+                "?"
               )}
             </div>
             <div className="overflow-hidden flex-1">
               <p className="text-xs font-semibold text-white truncate">
-                {user?.name || "Alex Sterling"}
+                {user?.name || "User"}
               </p>
               <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">
                 Recruiter
@@ -109,7 +109,7 @@ export function RecruiterSidebar({
           Account Tier
         </span>
         <span className="text-[9px] font-bold tracking-wider text-amber-400 uppercase bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-          Premium
+          {user?.plan || "Free"}
         </span>
       </div>
 
