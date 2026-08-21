@@ -1,6 +1,6 @@
 # HireLoop Project — Handoff Document
 
-**Last updated:** August 21, 2026  
+**Last updated:** August 21, 2026 (evening)  
 **Repos:** https://github.com/khalidhasan-m/hireloop-server  
 **Repos:** https://github.com/khalidhasan-m/hireloop-client  
 
@@ -22,119 +22,212 @@ HireLoop is a full-stack job portal with 3 roles:
 - **Client:** Next.js 16 (App Router), Tailwind, Better Auth client, react-hot-toast
 - **Server:** Express.js, native MongoDB driver (MongoClient), Better Auth
 - **Auth:** Better Auth (role on user: `seeker` | `recruiter` | `admin`)
-- **Payments:** Stripe (planned, not fully wired)
+- **Payments:** Stripe (checkout scaffold ready; set `STRIPE_SECRET_KEY`)
 
 ---
 
-## 2. What Is Already Done
+## 2. What Is Already Done ✅
 
 ### Server (`hireloop-server`)
 
-#### Folder structure
+#### Structure
 ```
 hireloop-server/
-├── index.js
+├── index.js                 # DB + all route mounts
 ├── config/
+│   └── stripe.js            # Stripe client (null if no key)
 ├── middleware/
-│   ├── auth.js
+│   ├── auth.js              # Better Auth session
 │   ├── role.js              # roleGuard, seekerOnly, recruiterOnly, adminOnly
-│   └── planLimit.js         # checkSeekerApplicationLimit, checkRecruiterJobLimit
+│   └── planLimit.js         # checkSeekerApplicationLimit, checkRecruiterJobLimit, checkSeekerSavedJobLimit
 ├── models/
 │   ├── User.js, Company.js, Job.js, Application.js
 │   ├── SavedJob.js, Payment.js, Subscription.js
 ├── routes/
+│   ├── job.routes.js        # CRUD + close/reopen (+ plan limit on create)
+│   ├── company.routes.js
+│   ├── application.routes.js # + plan limit on POST
+│   ├── savedJob.routes.js   # POST/GET/DELETE
+│   ├── payment.routes.js    # history, checkout session, confirm
+│   └── admin.routes.js      # stats, users, companies, jobs, payments
 └── utils/
     └── constants.js         # Plans, statuses, roles
 ```
 
+#### API endpoints (all under `/api`)
+
+| Area | Methods |
+|------|--------|
+| **Jobs** | POST `/jobs` (recruiter + plan limit), GET `/jobs`, GET `/jobs/my`, GET `/jobs/:id`, PATCH `/jobs/:id`, DELETE `/jobs/:id`, PATCH `/jobs/:id/close`, PATCH `/jobs/:id/reopen` |
+| **Companies** | POST `/companies`, GET `/companies/my`, PATCH `/companies/:id`, GET `/companies/:id` |
+| **Applications** | POST `/applications` (seeker + plan limit), GET `/applications/my`, GET `/applications/job/:jobId`, PATCH `/applications/:id/status` |
+| **Saved Jobs** | POST `/saved-jobs`, GET `/saved-jobs/my`, DELETE `/saved-jobs/:id` |
+| **Payments** | GET `/payments/my`, POST `/payments/create-checkout-session`, POST `/payments/confirm` |
+| **Admin** | GET `/admin/stats`, GET `/admin/users`, PATCH `/admin/users/:id/suspend`, GET `/admin/companies`, PATCH `/admin/companies/:id/status`, GET `/admin/jobs`, PATCH `/admin/jobs/:id/close`, GET `/admin/payments` |
+
+#### Collections on `app.locals`
+`jobCollection`, `companyCollection`, `applicationCollection`, `savedJobCollection`, `paymentCollection`, `subscriptionCollection`, `userCollection`, `sessionCollection`
+
 #### Constants
-- APPLICATION_STATUS, COMPANY_STATUS, JOB_STATUS, USER_ROLES
-- SEEKER_PLANS: FREE (3 apps/mo), PRO (30), PREMIUM (unlimited)
-- RECRUITER_PLANS: FREE (3 active jobs), GROWTH (10), ENTERPRISE (50)
-
-#### Existing APIs
-- Companies, Jobs (CRUD + close/reopen), Applications (create, my, by job, status update)
-
-### Client (`hireloop-client`)
-
-- Shared Sidebar + Dashboard layout (role-aware)
-- Seeker pages: Home, Applications, Saved Jobs, Billing, Settings (all dynamic UI)
-- Recruiter pages: UI exists, need real API wiring
-- Admin: placeholders only
-- API client: `src/lib/api/index.js` + `client.js`
+- `APPLICATION_STATUS`: Applied | Under Review | Shortlisted | Rejected | Offered  
+- `COMPANY_STATUS`: Pending | Approved | Rejected  
+- `JOB_STATUS`: active | closed | draft  
+- `SEEKER_PLANS`: FREE (3 apps/mo), PRO (30), PREMIUM (unlimited)  
+- `RECRUITER_PLANS`: FREE (3 active jobs), GROWTH (10), ENTERPRISE (50)
 
 ---
 
-## 3. What Is Left
+### Client (`hireloop-client`)
 
-### Priority order
+#### Shared
+- `src/components/common/Sidebar.jsx` — role-aware nav
+- `src/components/common/DashboardHeader.jsx`
+- `src/app/(dashboard)/dashboard/layout.jsx`
+- `src/lib/constants.js` — same enums/plans as server
+- `src/lib/api/index.js` + `client.js`
 
-**A. Step 8 — Wire Recruiter to real API (HIGH)**
-- Dashboard: getMyJobs + applications → real stats
-- Jobs: create/delete/close/reopen
-- Applications: load + updateApplicationStatus
+#### Seeker pages (dynamic)
+| Route | Status |
+|-------|--------|
+| `/dashboard/seeker` | ✅ Stats, profile, status bars, activity |
+| `/dashboard/seeker/applications` | ✅ Table, tabs, stats |
+| `/dashboard/seeker/saved` | ✅ List (uses Saved Jobs API) |
+| `/dashboard/seeker/billing` | ✅ Plan card, history UI |
+| `/dashboard/seeker/settings` | ✅ Profile, resume UI, skills |
 
-**B. Saved Jobs API on server (HIGH)**
-```
-POST /api/saved-jobs
-GET  /api/saved-jobs/my
-DELETE /api/saved-jobs/:id
-```
+#### Recruiter pages (dynamic)
+| Route | Status |
+|-------|--------|
+| `/dashboard/recruiter` | ✅ Real stats + recent apps + create job |
+| `/dashboard/recruiter/jobs` | ✅ List, create, delete, close, reopen |
+| `/dashboard/recruiter/applications` | ✅ Load apps, filter, update status |
+| `/dashboard/recruiter/company` | ⚠️ UI may still be partial |
+| `/dashboard/recruiter/settings` | ⚠️ Basic / partial |
+| `/dashboard/recruiter/billing` | ⚠️ Can mirror seeker billing |
 
-**C. Step 6 — Admin pages (HIGH)**
-- Home, Users, Companies (approve/reject), Jobs, Payments
+#### Admin pages (dynamic)
+| Route | Status |
+|-------|--------|
+| `/dashboard/admin` | ✅ Platform stats |
+| `/dashboard/admin/users` | ✅ List + suspend/unsuspend |
+| `/dashboard/admin/companies` | ✅ Approve / Reject |
+| `/dashboard/admin/jobs` | ✅ List + force close |
+| `/dashboard/admin/payments` | ✅ Payment list |
 
-**D. Step 7 — Stripe (MEDIUM)**
-- Checkout, webhooks, update user.plan
+---
 
-**E. Other**
-- Seeker browse jobs page
-- Public /pricing, /companies
-- Attach plan limit middleware to routes
-- Profile fields API (headline, bio, skills, resume)
+## 3. What Is Left (optional / polish)
+
+| Task | Priority | Notes |
+|------|----------|-------|
+| Seeker **Browse Jobs** page (`/dashboard/seeker/jobs`) | Medium | List active jobs + Apply + Save |
+| Public **`/pricing`** page | Medium | Show seeker + recruiter plans; call checkout |
+| Wire **Recruiter Company** page fully | Medium | `getMyCompany` / `updateMyCompany` |
+| Recruiter **Billing** page | Low | Same pattern as seeker billing |
+| **Stripe webhook** (production) | Medium | Verify signature; update plan on `checkout.session.completed` |
+| Set real Stripe **Price IDs** in constants | Medium | `SEEKER_PLANS.*.priceId` / `RECRUITER_PLANS.*.priceId` |
+| Persist profile fields API | Low | headline, bio, skills, resumeUrl on User |
+| Increment `applicantsCount` on job when apply | Low | In application POST |
+| Public company profiles `/companies` | Low | |
+| Better Auth role on signup | Medium | Ensure role is set correctly for seeker/recruiter |
 
 ---
 
 ## 4. Technical Notes
 
-- Token: `authClient.getSession()` → `data.session.token` → `Authorization: Bearer ...`
-- Application status strings: Applied | Under Review | Shortlisted | Rejected | Offered
-- Job status: active | closed | draft
-- Collections on app.locals: jobCollection, companyCollection, applicationCollection, savedJobCollection, etc.
+### Auth token (client)
+```js
+const { data } = await authClient.getSession();
+const token = data?.session?.token;
+// Header: Authorization: Bearer ${token}
+```
+
+### Application status (exact strings)
+```
+"Applied" | "Under Review" | "Shortlisted" | "Rejected" | "Offered"
+```
+
+### Job status
+```
+"active" | "closed" | "draft"
+```
+
+### Admin access
+User document must have `role: "admin"`.
+
+### Stripe env (server `.env`)
+```
+STRIPE_SECRET_KEY=sk_test_...
+CLIENT_URL=http://localhost:3000
+```
+Without `STRIPE_SECRET_KEY`, checkout returns 503 (safe).
+
+### Plan limits already attached
+- `POST /api/applications` → `checkSeekerApplicationLimit`
+- `POST /api/jobs` → `recruiterOnly` + `checkRecruiterJobLimit`
+- `POST /api/saved-jobs` → `checkSeekerSavedJobLimit`
 
 ---
 
-## 5. Run Locally
+## 5. How To Run
 
 ```bash
 # Server (port 5050)
-cd hireloop-server && npm install && npm run dev
+cd hireloop-server
+git pull origin main
+npm install
+# .env: MONGO_DB_URI, BETTER_AUTH_*, STRIPE_SECRET_KEY (optional), CLIENT_URL
+npm run dev
 
 # Client (port 3000)
 cd hireloop-client
-# NEXT_PUBLIC_API_URL=http://localhost:5050/api
-npm install && npm run dev
+git pull origin main
+# .env.local: NEXT_PUBLIC_API_URL=http://localhost:5050/api
+npm install
+npm run dev
 ```
 
 ---
 
-## 6. Checklist
+## 6. Progress Checklist
 
 ```
-[x] Constants, middleware, models
-[x] Shared layout + Seeker pages
-[ ] Recruiter real API wiring
-[ ] Saved Jobs server API
-[ ] Admin pages
-[ ] Stripe
-[ ] Plan limits on routes
-[ ] Public pricing
+[x] Constants (server + client)
+[x] Role + planLimit middleware
+[x] Models with create helpers
+[x] Shared Sidebar + Dashboard layout
+[x] Seeker Home, Applications, Saved, Billing, Settings
+[x] Recruiter Dashboard (real data)
+[x] Recruiter Jobs (create/delete/close/reopen)
+[x] Recruiter Applications (load + status update)
+[x] Saved Jobs server API
+[x] Plan limits on application + job + saved routes
+[x] Admin API + Admin UI pages
+[x] Stripe checkout scaffold + payment history
+[ ] Seeker browse jobs inside dashboard
+[ ] Public pricing page
+[ ] Production Stripe webhook
+[ ] Full company page (recruiter)
+[ ] Profile fields persistence API
 ```
 
-## 7. Prompt for next AI
+---
 
-> Continue HireLoop. Repos: khalidhasan-m/hireloop-server and hireloop-client.  
-> First: Step 8 — wire Recruiter dashboard/jobs/applications to existing APIs (no mocks).  
-> Then Saved Jobs API. Full context in HIRELOOP_HANDOFF.md.
+## 7. Suggested Prompt for Next AI
 
-**End of handoff.**
+> Continue HireLoop.  
+> Repos:  
+> - https://github.com/khalidhasan-m/hireloop-server  
+> - https://github.com/khalidhasan-m/hireloop-client  
+>  
+> Core dashboards (Seeker, Recruiter, Admin), Saved Jobs API, plan limits, and Stripe checkout scaffold are done.  
+> Next priorities:  
+> 1) Seeker browse-jobs page under `/dashboard/seeker/jobs` (list active jobs, apply, save)  
+> 2) Public `/pricing` page that calls `POST /api/payments/create-checkout-session`  
+> 3) Optional: Stripe webhook + set priceId in constants  
+>  
+> Full context: `HIRELOOP_HANDOFF.md` in both repos.
+
+---
+
+**End of handoff document.**
