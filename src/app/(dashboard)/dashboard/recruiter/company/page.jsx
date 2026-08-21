@@ -1,63 +1,169 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { authClient } from "@/lib/auth-client";
+import { api } from "@/lib/api";
 import { UnregisteredCompanyView } from "./_components/UnregisteredCompanyView";
 import { RegisteredCompanyView } from "./_components/RegisteredCompanyView";
-import { RegisterCompanyModal } from "./_components/RegisterCompanyModal"; // Import your modal
+import { RegisterCompanyModal } from "./_components/RegisterCompanyModal";
+import toast from "react-hot-toast";
+
+function mapCompanyToView(company) {
+  if (!company) return null;
+  const website = company.website || "";
+  const websiteUrl = website
+    ? website.startsWith("http")
+      ? website
+      : `https://${website}`
+    : "#";
+
+  return {
+    _id: company._id,
+    name: company.name,
+    tagline: company.tagline || company.industry || "",
+    about: company.description || company.about || "",
+    websiteUrl,
+    logoUrl: company.logo || company.logoUrl || "",
+    bannerUrl: company.bannerUrl || "",
+    industry: company.industry,
+    location: company.location,
+    employeeCount: company.employeeCount,
+    status: company.status || "Pending",
+  };
+}
 
 export default function RecruiterCompanyPage() {
-  const [isRegistered, setIsRegistered] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
+  const [company, setCompany] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  // Mock data (replace with API/Database data later)
-  const companyData = {
-    name: "LuminaTech Systems",
-    tagline:
-      "Engineering the future of enterprise cloud intelligence and distributed ledger solutions.",
-    about:
-      "Founded in 2014, LuminaTech Systems has emerged as a global leader in high-performance cloud infrastructure and decentralized computing systems.",
-    websiteUrl: "https://example.com",
-    logoUrl: "", 
-    bannerUrl: "",
+  const getToken = async () => {
+    const { data } = await authClient.getSession();
+    return data?.session?.token || null;
   };
 
-  const handleRegisterSubmit = (formData) => {
-    console.log("Submitted Company Data:", formData);
-    // TODO: Send data to your database / API here
-    setIsRegistered(true); // Switch view to registered state after successful submission
-    setIsModalOpen(false); // Close the modal
+  const loadCompany = useCallback(async () => {
+    try {
+      setLoading(true);
+      const token = await getToken();
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      const res = await api.getMyCompany(token).catch((err) => {
+        // 404 = no company yet
+        if (err?.message?.toLowerCase?.().includes("not found")) {
+          return null;
+        }
+        throw err;
+      });
+
+      if (res?.data) {
+        setCompany(mapCompanyToView(res.data));
+      } else {
+        setCompany(null);
+      }
+    } catch (err) {
+      console.error(err);
+      // Treat missing company as unregistered
+      setCompany(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadCompany();
+  }, [loadCompany]);
+
+  const handleRegisterSubmit = async (formData) => {
+    try {
+      setSaving(true);
+      const token = await getToken();
+      if (!token) {
+        toast.error("Please log in again.");
+        return;
+      }
+
+      const website = formData.website
+        ? formData.website.startsWith("http")
+          ? formData.website
+          : `https://${formData.website}`
+        : null;
+
+      const payload = {
+        name: formData.name,
+        industry: formData.industry || "Other",
+        website,
+        location: formData.location || null,
+        employeeCount: formData.employeeRange || formData.employeeCount || null,
+        description: formData.description || null,
+        logo: null, // file upload can be added later
+        status: "Pending",
+      };
+
+      const res = await api.createCompany(payload, token);
+      toast.success("Company registered successfully!");
+      setIsModalOpen(false);
+
+      if (res?.data) {
+        setCompany(mapCompanyToView(res.data));
+      } else {
+        await loadCompany();
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error(error.message || "Failed to register company");
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="py-20 text-center text-gray-500 text-sm animate-pulse">
+        Loading company profile...
+      </div>
+    );
+  }
 
   return (
     <div>
-      {/* Top Title Bar */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-          My Company
-        </h1>
-
-        {/* Demo Toggle Button (For Testing UI States) */}
-        <button
-          onClick={() => setIsRegistered(!isRegistered)}
-          className="text-[10px] font-mono px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 text-gray-400 hover:text-white transition cursor-pointer"
-        >
-          Toggle Demo State ({isRegistered ? "Registered" : "Unregistered"})
-        </button>
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+            My Company
+          </h1>
+          {company?.status && (
+            <p className="text-[11px] text-gray-500 mt-1">
+              Status:{" "}
+              <span
+                className={
+                  company.status === "Approved"
+                    ? "text-emerald-400"
+                    : company.status === "Rejected"
+                      ? "text-red-400"
+                      : "text-amber-400"
+                }
+              >
+                {company.status}
+              </span>
+            </p>
+          )}
+        </div>
       </div>
 
-      {/* Dynamic View Rendering */}
-      {isRegistered ? (
-        <RegisteredCompanyView companyData={companyData} />
+      {company ? (
+        <RegisteredCompanyView companyData={company} />
       ) : (
-        <UnregisteredCompanyView
-          onRegisterClick={() => setIsModalOpen(true)} // Opens the modal when clicked!
-        />
+        <UnregisteredCompanyView onRegisterClick={() => setIsModalOpen(true)} />
       )}
 
-      {/* Registration Modal Component */}
       <RegisterCompanyModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => !saving && setIsModalOpen(false)}
         onSubmit={handleRegisterSubmit}
       />
     </div>
