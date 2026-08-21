@@ -1,7 +1,13 @@
+import { apiRequest } from "./client"; // Adjust path if client.js is in a different folder
+
 const BACKEND_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5050/api";
 
 export const api = {
+  // ==========================================
+  // PUBLIC ROUTES (No Token Required)
+  // ==========================================
+
   // Fetches all jobs for the homepage
   getAllActiveJobs: async () => {
     try {
@@ -26,5 +32,24 @@ export const api = {
       console.error("API Error:", error);
       return { success: false, data: null };
     }
+  },
+
+  // ==========================================
+  // PROTECTED RECRUITER ROUTES (Token Required)
+  // ==========================================
+
+  // Fetch recruiter's own jobs
+  getMyJobs: async (token) => {
+    return apiRequest("GET", "/jobs/my", null, token);
+  },
+
+  // Create a new job
+  createJob: async (jobData, token) => {
+    return apiRequest("POST", "/jobs", jobData, token);
+  },
+
+  // Delete a job
+  deleteJob: async (jobId, token) => {
+    return apiRequest("DELETE", `/jobs/${jobId}`, null, token);
   },
 };
