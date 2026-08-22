@@ -99,7 +99,7 @@ export default function AdminSettingsPage() {
   if (!user) return <div className="py-20 text-center text-sm text-gray-400">Please log in to access Admin Settings.</div>;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-7 pb-12 text-white">
+    <div className="w-full space-y-7 pb-12 text-white">
       <header>
         <p className="text-[10px] uppercase tracking-[0.22em] text-indigo-400">Admin Console</p>
         <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">Settings</h1>
