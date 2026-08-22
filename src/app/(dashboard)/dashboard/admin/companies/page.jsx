@@ -23,6 +23,7 @@ export default function AdminCompaniesPage() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const load = async () => {
     setLoading(true);
@@ -37,6 +38,12 @@ export default function AdminCompaniesPage() {
   };
 
   useEffect(() => { load(); }, []);
+  useEffect(() => {
+    if (!deleteTarget) return undefined;
+    const handleKeyDown = (event) => { if (event.key === "Escape") setDeleteTarget(null); };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [deleteTarget]);
 
   const filtered = useMemo(() => companies.filter((company) => {
     const text = `${company.name || ""} ${company.industry || ""} ${company.recruiterEmail || company.email || ""}`.toLowerCase();
@@ -67,6 +74,21 @@ export default function AdminCompaniesPage() {
 
   const selectStatus = (value) => { setStatus(value); setPage(1); };
 
+  const deleteCompany = async () => {
+    if (!deleteTarget) return;
+    setUpdating(deleteTarget.id);
+    try {
+      const token = (await authClient.getSession()).data?.session?.token;
+      const response = await fetch(`${API}/admin/companies/${deleteTarget.id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` }, credentials: "include" });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.message || "Unable to delete company");
+      toast.success(json.message || "Rejected company deleted");
+      setDeleteTarget(null);
+      await load();
+    } catch (error) { toast.error(error.message || "Unable to delete company"); }
+    finally { setUpdating(null); }
+  };
+
   return <main className="min-w-0 space-y-7 text-white">
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div><h1 className="mt-5 text-2xl font-semibold tracking-tight sm:text-3xl">Company Registrations</h1><p className="mt-2 text-xs text-gray-400 sm:text-sm">Review and manage corporate entity access requests for the HireLoop ecosystem.</p></div>
@@ -78,10 +100,12 @@ export default function AdminCompaniesPage() {
 
     <section className="overflow-hidden rounded-xl border border-white/10 bg-[#171719]">
       <div className="overflow-x-auto"><table className="w-full min-w-[850px] text-left"><thead className="bg-[#252527] text-[10px] text-gray-400"><tr><th className="px-4 py-4 font-medium">Company Name</th><th className="px-4 py-4 font-medium">Recruiter Email</th><th className="px-4 py-4 font-medium">Industry</th><th className="px-4 py-4 font-medium">Status</th><th className="px-4 py-4 font-medium">Date Submitted</th><th className="px-4 py-4 text-right font-medium">Actions</th></tr></thead><tbody className="text-[11px]">
-        {loading ? <tr><td colSpan="6" className="px-4 py-16 text-center text-gray-500">Loading company registrations…</td></tr> : visible.length === 0 ? <tr><td colSpan="6" className="px-4 py-16 text-center text-gray-500">No company registrations found.</td></tr> : visible.map((company) => <tr key={company._id} className="border-t border-white/[.06] transition hover:bg-white/[.02]"><td className="px-4 py-4"><div className="flex items-center gap-3"><span className="flex h-7 w-7 items-center justify-center rounded bg-white/[.06] font-semibold text-gray-300">{company.name?.slice(0, 2).toUpperCase() || <HiBuildingOffice2 />}</span><span className="font-medium text-gray-200">{company.name || "Unnamed company"}</span></div></td><td className="px-4 py-4 text-gray-400">{company.recruiterEmail || company.email || "—"}</td><td className="px-4 py-4 text-gray-400">{company.industry || "Other"}</td><td className={`px-4 py-4 font-medium ${statusStyle[company.status] || "text-gray-400"}`}><span className="mr-1">•</span>{company.status || "Pending"}</td><td className="px-4 py-4 text-gray-400">{company.createdAt ? new Date(company.createdAt).toLocaleDateString(undefined, { month: "short", day: "2-digit", year: "numeric" }) : "—"}</td><td className="px-4 py-4 text-right">{updating === company._id ? <span className="text-[10px] text-gray-500">Updating…</span> : <div className="flex justify-end gap-2">{company.status !== COMPANY_STATUS.APPROVED && <button type="button" onClick={() => changeStatus(company._id, COMPANY_STATUS.APPROVED)} className="rounded border border-emerald-400/20 bg-emerald-400/10 px-2 py-1.5 text-[10px] text-emerald-300 hover:bg-emerald-400/20">Approve</button>}{company.status !== COMPANY_STATUS.REJECTED && <button type="button" onClick={() => changeStatus(company._id, COMPANY_STATUS.REJECTED)} className="rounded border border-rose-400/20 bg-rose-400/10 px-2 py-1.5 text-[10px] text-rose-300 hover:bg-rose-400/20">Reject</button>}</div>}</td></tr>)}
+        {loading ? <tr><td colSpan="6" className="px-4 py-16 text-center text-gray-500">Loading company registrations…</td></tr> : visible.length === 0 ? <tr><td colSpan="6" className="px-4 py-16 text-center text-gray-500">No company registrations found.</td></tr> : visible.map((company) => <tr key={company._id} className="border-t border-white/[.06] transition hover:bg-white/[.02]"><td className="px-4 py-4"><div className="flex items-center gap-3"><span className="flex h-7 w-7 items-center justify-center rounded bg-white/[.06] font-semibold text-gray-300">{company.name?.slice(0, 2).toUpperCase() || <HiBuildingOffice2 />}</span><span className="font-medium text-gray-200">{company.name || "Unnamed company"}</span></div></td><td className="px-4 py-4 text-gray-400">{company.recruiterEmail || company.email || "—"}</td><td className="px-4 py-4 text-gray-400">{company.industry || "Other"}</td><td className={`px-4 py-4 font-medium ${statusStyle[company.status] || "text-gray-400"}`}><span className="mr-1">•</span>{company.status || "Pending"}</td><td className="px-4 py-4 text-gray-400">{company.createdAt ? new Date(company.createdAt).toLocaleDateString(undefined, { month: "short", day: "2-digit", year: "numeric" }) : "—"}</td><td className="px-4 py-4 text-right">{updating === company._id ? <span className="text-[10px] text-gray-500">Updating…</span> : <div className="flex justify-end gap-2">{company.status !== COMPANY_STATUS.APPROVED && <button type="button" onClick={() => changeStatus(company._id, COMPANY_STATUS.APPROVED)} className="rounded border border-emerald-400/20 bg-emerald-400/10 px-2 py-1.5 text-[10px] text-emerald-300 hover:bg-emerald-400/20">Approve</button>}{company.status !== COMPANY_STATUS.REJECTED && <button type="button" onClick={() => changeStatus(company._id, COMPANY_STATUS.REJECTED)} className="rounded border border-rose-400/20 bg-rose-400/10 px-2 py-1.5 text-[10px] text-rose-300 hover:bg-rose-400/20">Reject</button>}{company.status === COMPANY_STATUS.REJECTED && <button type="button" onClick={() => setDeleteTarget({ id: company._id, name: company.name || "this company" })} className="rounded border border-rose-400/20 bg-rose-400/10 px-2 py-1.5 text-[10px] text-rose-300 hover:bg-rose-400/20">Delete</button>}</div>}</td></tr>)}
       </tbody></table></div>
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[.06] px-4 py-4 text-[10px] text-gray-500"><span>Showing {filtered.length ? (page - 1) * PAGE_SIZE + 1 : 0}-{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length} companies</span><div className="flex items-center gap-1"><button type="button" aria-label="Previous page" disabled={page <= 1} onClick={() => setPage((value) => value - 1)} className="rounded px-2 py-1 text-gray-500 disabled:opacity-30">‹</button>{Array.from({ length: totalPages }, (_, index) => index + 1).map((number) => <button type="button" key={number} onClick={() => setPage(number)} className={`h-7 min-w-7 rounded px-2 ${number === page ? "bg-white text-black" : "text-gray-400 hover:bg-white/10"}`}>{number}</button>)}<button type="button" aria-label="Next page" disabled={page >= totalPages} onClick={() => setPage((value) => value + 1)} className="rounded px-2 py-1 text-gray-500 disabled:opacity-30">›</button></div></div>
     </section>
+
+    {deleteTarget && <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" onMouseDown={(event) => { if (event.target === event.currentTarget && !updating) setDeleteTarget(null); }}><div role="alertdialog" aria-modal="true" aria-labelledby="delete-company-title" aria-describedby="delete-company-description" className="w-full max-w-md rounded-2xl border border-white/10 bg-[#171719] p-6 shadow-2xl"><div className="flex items-start gap-4"><div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-400/10 text-rose-300">!</div><div><h2 id="delete-company-title" className="text-base font-semibold text-white">Delete rejected company?</h2><p id="delete-company-description" className="mt-2 text-sm leading-6 text-gray-400">This permanently deletes <span className="font-medium text-gray-200">{deleteTarget.name}</span> and cannot be undone.</p></div></div><div className="mt-6 flex justify-end gap-3"><button type="button" disabled={Boolean(updating)} onClick={() => setDeleteTarget(null)} className="rounded-xl border border-white/10 px-4 py-2.5 text-xs font-semibold text-gray-300 transition hover:bg-white/5 disabled:opacity-50">Cancel</button><button type="button" disabled={Boolean(updating)} onClick={deleteCompany} className="rounded-xl bg-rose-500 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-rose-400 disabled:opacity-50">{updating ? "Deleting…" : "Delete Company"}</button></div></div></div>}
 
     <div className="grid gap-4 md:grid-cols-3">{summary.map(([label, value, Icon, color]) => <div key={label} className="rounded-xl border border-white/10 bg-[#171719] p-5"><div className="flex items-center justify-between"><span className="text-[10px] uppercase tracking-wide text-gray-500">{label}</span><Icon className={`text-base ${color}`} /></div><p className="mt-4 text-2xl font-semibold text-gray-200">{value}</p><p className="mt-2 text-[10px] text-gray-600">Live database total</p></div>)}</div>
   </main>;
