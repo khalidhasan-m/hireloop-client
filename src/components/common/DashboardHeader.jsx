@@ -30,18 +30,30 @@ export default function DashboardHeader({ user, setMobileSidebarOpen }) {
     return () => document.removeEventListener("mousedown", close);
   }, []);
 
-  const loadPanel = async (nextPanel) => {
-    setPanel((current) => current === nextPanel ? null : nextPanel);
-    if (panel === nextPanel) return;
-    setLoading(true);
+  const refreshDashboardUpdates = async (showLoading = false) => {
+    if (showLoading) setLoading(true);
     try {
       const { data } = await authClient.getSession();
       const token = data?.session?.token;
-      if (nextPanel === "notifications") { const response = await api.getNotifications(token); setNotifications(response.data || []); }
-      if (nextPanel === "messages") { const response = await api.getMessages(token); setMessages(response.data || []); }
-    } catch (error) { console.error(`Failed to load ${nextPanel}:`, error); }
-    finally { setLoading(false); }
+      if (!token) return;
+      const [notificationResponse, messageResponse] = await Promise.all([api.getNotifications(token), api.getMessages(token)]);
+      setNotifications(notificationResponse.data || []);
+      setMessages(messageResponse.data || []);
+    } catch (error) { console.error("Failed to refresh dashboard updates:", error); }
+    finally { if (showLoading) setLoading(false); }
   };
+
+  const loadPanel = async (nextPanel) => {
+    setPanel((current) => current === nextPanel ? null : nextPanel);
+    if (panel === nextPanel) return;
+    await refreshDashboardUpdates(true);
+  };
+
+  useEffect(() => {
+    refreshDashboardUpdates();
+    const interval = window.setInterval(() => refreshDashboardUpdates(), 10000);
+    return () => window.clearInterval(interval);
+  }, [user?.id]);
 
   const markNotification = async (item) => {
     try { const { data } = await authClient.getSession(); await api.markNotificationRead(item._id, data?.session?.token); setNotifications((items) => items.map((row) => row._id === item._id ? { ...row, readAt: new Date().toISOString() } : row)); } catch (error) { console.error(error); }
