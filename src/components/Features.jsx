@@ -208,7 +208,7 @@ export default function Features() {
           duration: 1.5,
           ease: "easeOut",
         }}
-        className="pointer-events-none absolute left-1/2 top-0 h-75 w-150 -translate-x-1/2 rounded-full bg-indigo-600/4 blur-[120px]"
+        className="pointer-events-none absolute left-1/2 top-0 h-75 w-150 -translate-x-1/2 rounded-full bg-indigo-600/2"
       />
 
       {/* Animated secondary glow */}
@@ -224,7 +224,7 @@ export default function Features() {
           repeat: 0,
           ease: "easeInOut",
         }}
-        className="pointer-events-none absolute left-1/2 top-20 h-40 w-80 -translate-x-1/2 rounded-full bg-indigo-500/3 blur-[100px]"
+        className="pointer-events-none absolute left-1/2 top-20 h-40 w-80 -translate-x-1/2 rounded-full bg-indigo-500/2"
       />
 
       <div className="relative z-10 mx-auto max-w-6xl">
@@ -359,8 +359,7 @@ export default function Features() {
                   h-24
                   w-24
                   rounded-full
-                  bg-indigo-500/10
-                  blur-2xl
+                  bg-indigo-500/5
                 "
               />
 
@@ -433,11 +432,11 @@ export default function Features() {
               >
                 {/* Icon glow */}
 
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  whileHover={{ opacity: 1 }}
-                  className="absolute inset-0 rounded-md bg-indigo-500/10 blur-md"
-                />
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    whileHover={{ opacity: 1 }}
+                    className="absolute inset-0 rounded-md bg-indigo-500/5"
+                  />
 
                 <span className="relative z-10">{feature.icon}</span>
               </motion.div>

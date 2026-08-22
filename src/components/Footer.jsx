@@ -92,8 +92,7 @@ export default function Footer() {
           w-150
           -translate-x-1/2
           rounded-full
-          bg-indigo-600/5
-          blur-[120px]
+          bg-indigo-600/2
         "
       />
 

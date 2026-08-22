@@ -17,11 +17,10 @@ export default function PricingSection() {
 
   return (
     <section className="relative overflow-hidden bg-[#030305] py-28 text-white">
-      <div className="pointer-events-none absolute left-1/2 top-1/2 h-105 w-212.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-500/4.5 blur-[150px]" />
       <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto mb-12 max-w-2xl space-y-4 text-center">
           <motion.div initial={{ opacity: 0, y: -15 }} animate={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="flex justify-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[#131318]/80 px-3.5 py-1.5 shadow-[0_0_20px_rgba(0,0,0,.25)] backdrop-blur-md">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[#131318]/80 px-3.5 py-1.5 shadow-[0_0_20px_rgba(0,0,0,.25)]">
               <span className="text-[10px]">💎</span><span className="text-[9px] font-medium uppercase tracking-[0.17em] text-gray-400">Pricing</span>
             </div>
           </motion.div>
@@ -31,7 +30,7 @@ export default function PricingSection() {
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {plans.map(([key, plan], index) => (
-            <motion.div key={key} initial={{ opacity: 0, y: 25 }} animate={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: index * 0.1 }} whileHover={{ y: -4 }} className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border bg-[#0b0b0e]/95 p-7 shadow-[0_15px_45px_rgba(0,0,0,.5)] backdrop-blur-xl transition duration-300 ${key === "PREMIUM" ? "border-indigo-500/40 shadow-[0_0_30px_rgba(99,102,241,0.15)]" : "border-white/10"}`}>
+            <motion.div key={key} initial={{ opacity: 0, y: 25 }} animate={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: index * 0.1 }} whileHover={{ y: -4 }} className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border bg-[#0b0b0e]/95 p-7 shadow-[0_15px_45px_rgba(0,0,0,.5)] transition duration-300 ${key === "PREMIUM" ? "border-indigo-500/40 shadow-[0_0_30px_rgba(99,102,241,0.15)]" : "border-white/10"}`}>
               <div className="absolute left-0 right-0 top-0 h-px bg-white/12" />
               <div className="space-y-6">
                 <div className="flex items-center justify-between">

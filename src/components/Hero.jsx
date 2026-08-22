@@ -117,7 +117,7 @@ export default function Hero() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1.5 }}
-          className="absolute left-1/2 -top-30 h-105 w-212.5 -translate-x-1/2 rounded-full bg-indigo-500/4.5 blur-[150px]"
+          className="absolute left-1/2 -top-30 h-105 w-212.5 -translate-x-1/2 rounded-full bg-indigo-500/2"
         />
 
         {/* Globe atmospheric glow */}
@@ -133,8 +133,7 @@ export default function Hero() {
             w-212.5
             -translate-x-1/2
             rounded-[50%]
-            bg-[radial-gradient(ellipse_at_center,rgba(75,60,255,0.35)_0%,rgba(52,40,190,0.18)_35%,transparent_72%)]
-            blur-[25px]
+            bg-[radial-gradient(ellipse_at_center,rgba(75,60,255,0.22)_0%,rgba(52,40,190,0.10)_35%,transparent_72%)]
           "
         />
 
@@ -417,8 +416,7 @@ export default function Hero() {
               w-212.5
               -translate-x-1/2
               rounded-[50%]
-              bg-indigo-600/20
-              blur-[65px]
+              bg-indigo-600/10
             "
           />
 
@@ -575,7 +573,6 @@ export default function Hero() {
                   bg-[#0b0b0e]/95
                   p-3.5
                   shadow-[0_15px_45px_rgba(0,0,0,.5)]
-                  backdrop-blur-xl
                   sm:h-29.5
                   sm:p-4
                 "

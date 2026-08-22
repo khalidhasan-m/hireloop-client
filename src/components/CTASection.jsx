@@ -52,8 +52,7 @@ export default function CTASection() {
             w-187.5
             -translate-x-1/2
             rounded-full
-            bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.55)_0%,rgba(124,58,237,0.35)_40%,transparent_75%)]
-            blur-[50px]
+            bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.22)_0%,rgba(124,58,237,0.12)_40%,transparent_75%)]
           "
         />
 
@@ -115,7 +114,7 @@ export default function CTASection() {
             h-95
             w-full
             -translate-x-1/2
-            bg-[radial-gradient(ellipse_at_center,rgba(139,92,246,0.3)_0%,rgba(79,70,229,0.15)_50%,transparent_80%)]
+            bg-[radial-gradient(ellipse_at_center,rgba(139,92,246,0.16)_0%,rgba(79,70,229,0.08)_50%,transparent_80%)]
           "
         />
 
@@ -148,8 +147,7 @@ export default function CTASection() {
             w-80
             -translate-x-1/2
             rounded-full
-            bg-indigo-400/10
-            blur-[80px]
+            bg-indigo-400/5
           "
         />
 
@@ -333,7 +331,6 @@ export default function CTASection() {
                     text-[11px]
                     font-medium
                     text-gray-300
-                    backdrop-blur-sm
                     transition
                     hover:border-white/25
                     hover:bg-white/6
