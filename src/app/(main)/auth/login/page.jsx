@@ -27,7 +27,6 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(true);
 
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleChange = (e) => {
@@ -115,27 +114,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    try {
-      setError("");
-      setGoogleLoading(true);
-
-      await authClient.signIn.social({
-        provider: "google",
-        callbackURL: "/",
-      });
-    } catch (err) {
-      console.error("Google login error:", err);
-
-      const message = "Unable to continue with Google. Please try again.";
-
-      setError(message);
-      toast.error(message);
-
-      setGoogleLoading(false);
-    }
-  };
-
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#030305] text-white">
       {/* =====================================================
@@ -212,42 +190,7 @@ export default function LoginPage() {
               </p>
             </div>
 
-            {/* =================================================
-                GOOGLE
-            ================================================== */}
-
-            <Button
-              type="button"
-              onPress={handleGoogleLogin}
-              isDisabled={googleLoading || loading}
-              className="mt-6 h-11 w-full rounded-xl border border-white/10 bg-white text-sm font-medium text-black transition hover:bg-gray-100"
-            >
-              <span className="flex items-center justify-center gap-3">
-                {googleLoading ? (
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-t-black" />
-                ) : (
-                  <span className="flex h-5 w-5 items-center justify-center font-semibold text-[#4285F4]">
-                    G
-                  </span>
-                )}
-
-                {googleLoading ? "Connecting..." : "Continue with Google"}
-              </span>
-            </Button>
-
-            {/* =================================================
-                DIVIDER
-            ================================================== */}
-
-            <div className="my-6 flex items-center gap-3">
-              <div className="h-px flex-1 bg-white/10" />
-
-              <span className="text-[10px] uppercase tracking-[0.15em] text-gray-600">
-                or continue with email
-              </span>
-
-              <div className="h-px flex-1 bg-white/10" />
-            </div>
+            <div className="mt-6" />
 
             {/* =================================================
                 FORM
@@ -364,7 +307,6 @@ export default function LoginPage() {
                 type="submit"
                 isDisabled={
                   loading ||
-                  googleLoading ||
                   !formData.email.trim() ||
                   !formData.password
                 }
