@@ -103,7 +103,7 @@ export default function AdminUsersPage() {
   return (
     <main className="space-y-7 text-white">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div><p className="text-xs uppercase tracking-[.22em] text-indigo-400">Admin Console</p><h1 className="mt-2 text-3xl font-bold">User Management</h1><p className="mt-1 text-sm text-gray-400">Review, filter, and manage platform access for all users.</p></div>
+        <div><h1 className="mt-2 text-3xl font-bold">User Management</h1><p className="mt-1 text-sm text-gray-400">Review, filter, and manage platform access for all users.</p></div>
         <div className="flex shrink-0 flex-nowrap items-center gap-2">
           <select aria-label="Filter users by role" value={role} onChange={(event) => setRole(event.target.value)} className="rounded-xl border border-white/10 bg-[#111118] px-4 py-2.5 text-xs text-white"><option value="all">All Roles</option><option value="seeker">Seekers</option><option value="recruiter">Recruiters</option></select>
           <button type="button" onClick={exportList} className="rounded-xl bg-white px-4 py-2.5 text-xs font-semibold text-black">Export List</button>

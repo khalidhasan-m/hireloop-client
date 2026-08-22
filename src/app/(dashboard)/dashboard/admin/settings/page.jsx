@@ -101,7 +101,6 @@ export default function AdminSettingsPage() {
   return (
     <div className="w-full space-y-7 pb-12 text-white">
       <header>
-        <p className="text-[10px] uppercase tracking-[0.22em] text-indigo-400">Admin Console</p>
         <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">Settings</h1>
         <p className="mt-2 text-xs text-gray-400 sm:text-sm">Manage your administrator profile, profile picture, and account security.</p>
       </header>
