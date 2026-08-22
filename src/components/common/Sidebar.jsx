@@ -76,7 +76,6 @@ export default function Sidebar({
   const roleColor = ROLE_COLORS[role] || ROLE_COLORS.seeker;
   const plan = String(user?.plan || "FREE").toUpperCase();
   const planLabel = role === "admin" ? "System Administrator" : PLAN_LABELS[plan] || `${plan} Plan`;
-  const adminChrome = role === "admin";
 
   const isActive = (href) => {
     if (href === `/dashboard/${role}`) {
@@ -108,7 +107,7 @@ export default function Sidebar({
       </div>
 
       {/* User card */}
-      <div className={`${adminChrome ? "p-2 mx-2 mt-3 rounded-lg" : "p-3 mx-3 mt-4 rounded-2xl"} border border-white/10 bg-white/2 flex items-center gap-3`}>
+      <div className="p-3 mx-3 mt-4 rounded-2xl border border-white/10 bg-white/2 flex items-center gap-3">
         {isPending ? (
           <div className="animate-pulse flex items-center gap-3 w-full">
             <div className="w-10 h-10 rounded-full bg-white/10" />
@@ -146,7 +145,7 @@ export default function Sidebar({
       </div>
 
       {/* Role and account status */}
-      <div className={`${adminChrome ? "mx-2 mt-2 px-2 py-1.5 rounded-md" : "mx-3 mt-3 px-3 py-2 rounded-lg"} border border-white/10 bg-white/3`}>
+      <div className="mx-3 mt-3 px-3 py-2 rounded-lg border border-white/10 bg-white/3">
         <div className="flex items-center justify-between gap-2">
           <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Role</span>
           <span className={`rounded border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${roleColor}`}>{roleLabel}</span>
@@ -155,7 +154,7 @@ export default function Sidebar({
       </div>
 
       {/* Navigation */}
-      <nav className={`${adminChrome ? "px-2 py-4 space-y-0.5" : "px-3 py-5 space-y-1"} flex-1 overflow-y-auto`}>
+      <nav className="px-3 py-5 space-y-1 flex-1 overflow-y-auto">
         {links.map((link) => {
           const Icon = link.icon;
           const active = isActive(link.href);
@@ -165,7 +164,7 @@ export default function Sidebar({
               key={link.href}
               href={link.href}
               onClick={() => setMobileOpen?.(false)}
-              className={`flex items-center gap-2 ${adminChrome ? "px-3 py-2 rounded-lg text-[10px]" : "px-4 py-2.5 rounded-xl text-xs"} font-medium transition-all duration-200 ${
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium transition-all duration-200 ${
                 active
                   ? "bg-white/10 text-white border border-white/10 shadow-sm"
                   : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
@@ -179,7 +178,7 @@ export default function Sidebar({
       </nav>
 
       {/* Logout */}
-      <div className={`${adminChrome ? "p-3" : "p-5"} border-t border-white/10`}>
+      <div className="p-5 border-t border-white/10">
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-medium text-gray-400 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all cursor-pointer"
