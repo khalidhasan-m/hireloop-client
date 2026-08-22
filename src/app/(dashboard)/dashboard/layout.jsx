@@ -13,7 +13,6 @@ export default function DashboardLayout({ children }) {
 
   const { data: session, isPending } = authClient.useSession();
   const user = session?.user;
-  const isAdmin = String(user?.role || "").toLowerCase() === "admin";
 
   const handleLogout = async () => {
     try {
@@ -44,7 +43,7 @@ export default function DashboardLayout({ children }) {
       />
 
       {/* Main content area */}
-      <div className={`min-w-0 flex-1 flex flex-col min-h-screen ${isAdmin ? "lg:pl-40" : "lg:pl-56"}`}>
+      <div className={`min-w-0 flex-1 flex flex-col min-h-screen lg:pl-56`}>
         <DashboardHeader
           user={user}
           setMobileSidebarOpen={setMobileSidebarOpen}

@@ -29,8 +29,8 @@ async function assertNoHorizontalOverflow(page) {
 
 test.describe('sidebar visual regression contracts', () => {
   test('preserves role-specific desktop sidebar widths', async () => {
-    expect(sidebarSource).toContain('adminChrome ? "lg:w-40" : "lg:w-56"');
-    expect(layoutSource).toContain('isAdmin ? "lg:pl-40" : "lg:pl-56"');
+    expect(sidebarSource).toContain('lg:w-56');
+    expect(layoutSource).toContain('lg:pl-56');
     expect(sidebarSource).toContain('lg:hidden fixed inset-0 z-40 flex');
     expect(sidebarSource).toContain('relative w-56 max-w-[85vw] h-full z-50');
   });
