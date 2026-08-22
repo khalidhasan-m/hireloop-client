@@ -48,7 +48,7 @@ export default function SeekerSettingsPage() {
     setSkills((prev) => prev.filter((x) => x !== skill));
   };
 
-  const upload = async (kind, file) => { if (!file) return; setUploading(true); try { const { data } = await authClient.getSession(); const result = kind === "resume" ? await api.uploadResume(file, data?.session?.token) : await api.uploadAvatar(file, data?.session?.token); if (kind === "resume") setResumeName(file.name); else if (result?.data?.url) setAvatarUrl(result.data.url); toast.success(`${kind === "resume" ? "Resume" : "Avatar"} uploaded`); } catch (error) { toast.error(error.message || "Upload failed"); } finally { setUploading(false); } };
+  const upload = async (kind, file) => { if (!file) return; setUploading(true); try { const { data } = await authClient.getSession(); const result = kind === "resume" ? await api.uploadResume(file, data?.session?.token) : await api.uploadAvatar(file, data?.session?.token); if (kind === "resume") setResumeName(file.name); else if (result?.data?.url) { setAvatarUrl(result.data.url); await authClient.updateUser({ image: result.data.url }); } toast.success(`${kind === "resume" ? "Resume" : "Avatar"} uploaded`); } catch (error) { toast.error(error.message || "Upload failed"); } finally { setUploading(false); } };
   const handleSaveDetails = async () => { setSaving(true); try { const { data } = await authClient.getSession(); const result = await api.updateProfile({ headline, bio, skills }, data?.session?.token); if (result?.data) toast.success("Professional details saved"); } catch (error) { toast.error(error.message || "Failed to save details"); } finally { setSaving(false); } };
 
   const handleChangePassword = async (e) => {
@@ -69,8 +69,12 @@ export default function SeekerSettingsPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const { error } = await authClient.updateUser({ name });
-      if (error) throw new Error(error.message);
+      const { data } = await authClient.getSession();
+      const result = await api.updateProfile({ name, image: avatarUrl || null }, data?.session?.token);
+      if (result?.data) {
+        setName(result.data.name || name);
+        await authClient.updateUser({ name: result.data.name || name, image: result.data.image || avatarUrl || null });
+      }
       toast.success("Profile updated");
     } catch (err) {
       console.error(err);

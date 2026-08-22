@@ -17,6 +17,7 @@ export const api = {
   uploadCompanyLogo: (id, file, token) => api.uploadFile(`/uploads/company-logo/${id}`, file, token),
   getNotifications: (token) => apiRequest("GET", "/notifications", null, token),
   markNotificationRead: (id, token) => apiRequest("PATCH", `/notifications/${id}/read`, null, token),
+  clearNotifications: (token) => apiRequest("DELETE", "/notifications", null, token),
   getMessages: (token) => apiRequest("GET", "/messages", null, token),
   sendMessage: (data, token) => apiRequest("POST", "/messages", data, token),
   markMessageRead: (id, token) => apiRequest("PATCH", `/messages/${id}/read`, null, token),
