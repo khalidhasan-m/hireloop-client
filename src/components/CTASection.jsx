@@ -1,11 +1,23 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { authClient } from "@/lib/auth-client";
 import { Button } from "@heroui/react";
 import { HiArrowRight } from "react-icons/hi2";
 import { motion } from "motion/react";
 
 export default function CTASection() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    authClient.getSession().then(({ data }) => {
+      if (active) setIsAuthenticated(Boolean(data?.user || data?.session?.user));
+    }).catch(() => {});
+    return () => { active = false; };
+  }, []);
+
   return (
     <section className="relative w-full overflow-hidden bg-[#030305] pt-10 text-white sm:pt-14">
       {/* =====================================================
@@ -253,9 +265,9 @@ export default function CTASection() {
             }}
             className="mt-6 flex items-center gap-2.5"
           >
-            {/* Create Account */}
+            {/* Create Account / Dashboard */}
 
-            <Link href="/auth/signup">
+            <Link href={isAuthenticated ? "/dashboard" : "/auth/signup"}>
               <motion.div
                 whileHover={{
                   scale: 1.04,
@@ -287,7 +299,7 @@ export default function CTASection() {
                     sm:text-xs
                   "
                 >
-                  Create a free account
+                  {isAuthenticated ? "Go to dashboard" : "Create a free account"}
                 </Button>
               </motion.div>
             </Link>
