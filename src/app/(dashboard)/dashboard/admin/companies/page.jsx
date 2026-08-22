@@ -10,6 +10,15 @@ import toast from "react-hot-toast";
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5050/api";
 const PAGE_SIZE = 5;
 
+const readApiResponse = async (response, fallbackMessage) => {
+  const text = await response.text();
+  try {
+    return text ? JSON.parse(text) : {};
+  } catch {
+    throw new Error(response.status === 404 ? "Admin API route not found. Pull the latest server code and restart the API on port 5050." : fallbackMessage);
+  }
+};
+
 const statusStyle = {
   [COMPANY_STATUS.PENDING]: "text-amber-300",
   [COMPANY_STATUS.APPROVED]: "text-emerald-400",
@@ -80,7 +89,7 @@ export default function AdminCompaniesPage() {
     try {
       const token = (await authClient.getSession()).data?.session?.token;
       const response = await fetch(`${API}/admin/companies/${deleteTarget.id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` }, credentials: "include" });
-      const json = await response.json();
+      const json = await readApiResponse(response, "The Admin API returned an invalid response. Confirm the server is running the latest code on port 5050.");
       if (!response.ok) throw new Error(json.message || "Unable to delete company");
       toast.success(json.message || "Rejected company deleted");
       setDeleteTarget(null);
