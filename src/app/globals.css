@@ -1,2 +1,7 @@
 @import "tailwindcss";
 @import "@heroui/styles"; 
+
+/* Contrast-safe muted text for the dark dashboard and public surfaces. */
+.text-gray-500 { color: #a1a1aa !important; }
+.text-gray-600 { color: #a1a1aa !important; }
+.text-gray-400 { color: #d1d5db !important; }
