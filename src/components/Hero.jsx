@@ -166,7 +166,7 @@ export default function Hero() {
             transition={{
               duration: 2 + (index % 3),
               delay: index * 0.15,
-              repeat: Infinity,
+              repeat: 0,
               ease: "easeInOut",
             }}
             className={`absolute ${horizontal} ${vertical} h-0.5 w-0.5 rounded-full ${color}`}
@@ -406,7 +406,7 @@ export default function Hero() {
             }}
             transition={{
               duration: 5,
-              repeat: Infinity,
+              repeat: 0,
               ease: "easeInOut",
             }}
             className="
@@ -451,7 +451,7 @@ export default function Hero() {
               }}
               transition={{
                 duration: 12,
-                repeat: Infinity,
+                repeat: 0,
                 ease: "easeInOut",
               }}
               className="

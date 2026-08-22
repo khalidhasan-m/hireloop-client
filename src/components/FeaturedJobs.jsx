@@ -45,7 +45,7 @@ export default function FeaturedJobs() {
         <div className="text-center max-w-2xl mx-auto space-y-4 mb-16">
           <motion.div
             initial={{ opacity: 0, y: -15 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            animate={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
             className="flex justify-center"
@@ -60,7 +60,7 @@ export default function FeaturedJobs() {
 
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            animate={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.15 }}
             className="text-[32px] sm:text-4xl md:text-[44px] font-semibold tracking-[-0.045em] leading-[1.1]"
@@ -88,7 +88,7 @@ export default function FeaturedJobs() {
               >
                 <motion.div
                   initial={{ opacity: 0, y: 25 }}
-                  whileInView={{ opacity: 1, y: 0 }}
+                  animate={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: index * 0.08 }}
                   whileHover={{ y: -4 }}
@@ -133,7 +133,7 @@ export default function FeaturedJobs() {
         {/* View All Button */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          animate={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.3 }}
           className="flex justify-center mt-12"

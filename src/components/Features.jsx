@@ -202,7 +202,7 @@ export default function Features() {
 
       <motion.div
         initial={{ opacity: 0, scale: 0.7 }}
-        whileInView={{ opacity: 1, scale: 1 }}
+        animate={{ opacity: 1, scale: 1 }}
         viewport={{ once: true, amount: 0.2 }}
         transition={{
           duration: 1.5,
@@ -221,7 +221,7 @@ export default function Features() {
         }}
         transition={{
           duration: 8,
-          repeat: Infinity,
+          repeat: 0,
           ease: "easeInOut",
         }}
         className="pointer-events-none absolute left-1/2 top-20 h-40 w-80 -translate-x-1/2 rounded-full bg-indigo-500/3 blur-[100px]"
@@ -234,7 +234,7 @@ export default function Features() {
 
         <motion.div
           initial={{ opacity: 0, y: 15 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          animate={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.5 }}
           transition={{
             duration: 0.6,
@@ -244,7 +244,7 @@ export default function Features() {
         >
           <motion.span
             initial={{ scale: 0 }}
-            whileInView={{ scale: 1 }}
+            animate={{ scale: 1 }}
             viewport={{ once: true }}
             transition={{
               delay: 0.15,
@@ -261,7 +261,7 @@ export default function Features() {
 
           <motion.span
             initial={{ scale: 0 }}
-            whileInView={{ scale: 1 }}
+            animate={{ scale: 1 }}
             viewport={{ once: true }}
             transition={{
               delay: 0.15,
@@ -279,7 +279,7 @@ export default function Features() {
 
         <motion.div
           initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          animate={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.5 }}
           transition={{
             duration: 0.8,
@@ -302,7 +302,7 @@ export default function Features() {
         <motion.div
           variants={containerVariants}
           initial="hidden"
-          whileInView="visible"
+          animate="visible"
           viewport={{
             once: true,
             amount: 0.15,
@@ -449,7 +449,7 @@ export default function Features() {
               <div className="relative z-10 min-w-0">
                 <motion.h3
                   initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
+                  animate={{ opacity: 1 }}
                   viewport={{ once: true }}
                   transition={{
                     duration: 0.4,
@@ -462,7 +462,7 @@ export default function Features() {
 
                 <motion.p
                   initial={{ opacity: 0, y: 5 }}
-                  whileInView={{ opacity: 1, y: 0 }}
+                  animate={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{
                     duration: 0.4,

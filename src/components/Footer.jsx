@@ -73,7 +73,7 @@ export default function Footer() {
         initial={{
           opacity: 0,
         }}
-        whileInView={{
+        animate={{
           opacity: 1,
         }}
         viewport={{
@@ -104,7 +104,7 @@ export default function Footer() {
       <motion.div
         variants={footerContainer}
         initial="hidden"
-        whileInView="visible"
+        animate="visible"
         viewport={{
           once: true,
           amount: 0.15,

@@ -223,7 +223,7 @@ export default function Navbar() {
                   }}
                   transition={{
                     duration: 1.5,
-                    repeat: Infinity,
+                    repeat: 0,
                     ease: "easeInOut",
                   }}
                   className="h-8 w-24 rounded-lg bg-white/5"
@@ -565,7 +565,7 @@ export default function Navbar() {
                     }}
                     transition={{
                       duration: 1.5,
-                      repeat: Infinity,
+                      repeat: 0,
                       ease: "easeInOut",
                     }}
                     className="h-9 w-full rounded-lg bg-white/5"

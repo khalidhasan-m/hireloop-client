@@ -40,7 +40,7 @@ export default function CTASection() {
           }}
           transition={{
             duration: 5,
-            repeat: Infinity,
+            repeat: 0,
             ease: "easeInOut",
           }}
           className="
@@ -70,7 +70,7 @@ export default function CTASection() {
           }}
           transition={{
             duration: 12,
-            repeat: Infinity,
+            repeat: 0,
             ease: "easeInOut",
           }}
           className="
@@ -104,7 +104,7 @@ export default function CTASection() {
           }}
           transition={{
             duration: 5,
-            repeat: Infinity,
+            repeat: 0,
             ease: "easeInOut",
           }}
           className="
@@ -136,7 +136,7 @@ export default function CTASection() {
           }}
           transition={{
             duration: 8,
-            repeat: Infinity,
+            repeat: 0,
             ease: "easeInOut",
           }}
           className="
@@ -174,7 +174,7 @@ export default function CTASection() {
               y: 35,
               filter: "blur(8px)",
             }}
-            whileInView={{
+            animate={{
               opacity: 1,
               y: 0,
               filter: "blur(0px)",
@@ -196,7 +196,7 @@ export default function CTASection() {
                 opacity: 0,
                 y: 15,
               }}
-              whileInView={{
+              animate={{
                 opacity: 1,
                 y: 0,
               }}
@@ -222,7 +222,7 @@ export default function CTASection() {
               opacity: 0,
               y: 20,
             }}
-            whileInView={{
+            animate={{
               opacity: 1,
               y: 0,
             }}
@@ -250,7 +250,7 @@ export default function CTASection() {
               opacity: 0,
               y: 20,
             }}
-            whileInView={{
+            animate={{
               opacity: 1,
               y: 0,
             }}
@@ -371,7 +371,7 @@ export default function CTASection() {
               width: 0,
               opacity: 0,
             }}
-            whileInView={{
+            animate={{
               width: 90,
               opacity: 1,
             }}
