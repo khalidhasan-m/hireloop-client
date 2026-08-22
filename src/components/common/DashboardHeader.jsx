@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { HiBars3, HiBell, HiHome, HiMagnifyingGlass, HiEnvelope, HiCheck } from "react-icons/hi2";
 import { authClient } from "@/lib/auth-client";
 import { api } from "@/lib/api";
+import { createNotificationPolling } from "@/lib/notificationPolling";
 
 function formatDate(value) {
   if (!value) return "";
@@ -50,9 +51,26 @@ export default function DashboardHeader({ user, setMobileSidebarOpen }) {
   };
 
   useEffect(() => {
-    refreshDashboardUpdates();
-    const interval = window.setInterval(() => refreshDashboardUpdates(), 10000);
-    return () => window.clearInterval(interval);
+    const poller = createNotificationPolling({
+      getUpdates: async () => {
+        const { data } = await authClient.getSession();
+        const token = data?.session?.token;
+        if (!token) return {};
+        const results = await Promise.allSettled([api.getNotifications(token), api.getMessages(token)]);
+        const [notificationResult, messageResult] = results;
+        if (notificationResult.status === "rejected") console.error("Failed to refresh notifications:", notificationResult.reason);
+        if (messageResult.status === "rejected") console.error("Failed to refresh messages:", messageResult.reason);
+        return {
+          notifications: notificationResult.status === "fulfilled" ? notificationResult.value.data || [] : null,
+          messages: messageResult.status === "fulfilled" ? messageResult.value.data || [] : null,
+        };
+      },
+      onNotifications: setNotifications,
+      onMessages: setMessages,
+      onError: (error) => console.error("Failed to refresh dashboard updates:", error),
+    });
+    poller.start();
+    return () => poller.stop();
   }, [user?.id]);
 
   const markNotification = async (item) => {
