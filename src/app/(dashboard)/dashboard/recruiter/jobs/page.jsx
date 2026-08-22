@@ -15,6 +15,8 @@ export default function RecruiterJobsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const getAuthToken = async () => {
     try {
@@ -47,6 +49,13 @@ export default function RecruiterJobsPage() {
     fetchMyJobs();
   }, [fetchMyJobs]);
 
+  useEffect(() => {
+    if (!deleteTarget) return undefined;
+    const handleKeyDown = (event) => { if (event.key === "Escape" && !deleting) setDeleteTarget(null); };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [deleteTarget, deleting]);
+
   const handleCreateJob = async (newJobData) => {
     try {
       const token = await getAuthToken();
@@ -64,16 +73,22 @@ export default function RecruiterJobsPage() {
     }
   };
 
-  const handleDeleteJob = async (job) => {
-    if (!confirm(`Delete "${job.title}"? This cannot be undone.`)) return;
+  const handleDeleteJob = (job) => setDeleteTarget(job);
+
+  const confirmDeleteJob = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
       const token = await getAuthToken();
-      await api.deleteJob(job._id, token);
-      setJobs((prev) => prev.filter((j) => j._id !== job._id));
+      await api.deleteJob(deleteTarget._id, token);
+      setJobs((prev) => prev.filter((j) => j._id !== deleteTarget._id));
+      setDeleteTarget(null);
       toast.success("Job deleted successfully.");
     } catch (error) {
       console.error(error);
       toast.error(error.message || "Failed to delete job.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -160,6 +175,8 @@ export default function RecruiterJobsPage() {
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleCreateJob}
       />
+
+      {deleteTarget && <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" onMouseDown={(event) => { if (event.target === event.currentTarget && !deleting) setDeleteTarget(null); }}><div role="alertdialog" aria-modal="true" aria-labelledby="delete-job-title" aria-describedby="delete-job-description" className="w-full max-w-md rounded-2xl border border-white/10 bg-[#151519] p-6 shadow-2xl"><div className="flex items-start gap-4"><div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-400/10 text-rose-300">!</div><div><h2 id="delete-job-title" className="text-base font-semibold text-white">Delete job?</h2><p id="delete-job-description" className="mt-2 text-sm leading-6 text-gray-400">This permanently deletes <span className="font-medium text-gray-200">{deleteTarget.title || "this job"}</span> and cannot be undone.</p></div></div><div className="mt-6 flex justify-end gap-3"><button type="button" disabled={deleting} onClick={() => setDeleteTarget(null)} className="rounded-xl border border-white/10 px-4 py-2.5 text-xs font-semibold text-gray-300 transition hover:bg-white/5 disabled:opacity-50">Cancel</button><button type="button" disabled={deleting} onClick={confirmDeleteJob} className="rounded-xl bg-rose-500 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-rose-400 disabled:opacity-50">{deleting ? "Deleting…" : "Delete Job"}</button></div></div></div>}
     </div>
   );
 }
