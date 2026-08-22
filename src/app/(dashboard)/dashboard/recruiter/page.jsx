@@ -15,6 +15,7 @@ import { RecentApplicationsTable } from "./_components/RecentApplicationsTable";
 import { TopCompaniesCard } from "./_components/TopCompaniesCard";
 import { CreateJobModal } from "./jobs/_components/CreateJobModal";
 import toast from "react-hot-toast";
+import SimpleBarChart from "@/components/charts/SimpleBarChart";
 
 const STATUS_COLORS = {
   applied: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
@@ -159,7 +160,24 @@ export default function RecruiterDashboardPage() {
     }
   };
 
-  const topCompanies = company ? [{ name: company.name, category: company.industry || "Company", jobs: `${activeJobs} ACTIVE JOBS`, logo: company.logo || company.logoUrl }] : [];
+  const topCompanies = company
+    ? [
+        {
+          name: company.name,
+          category: company.industry || "Company",
+          jobs: `${activeJobs} ACTIVE JOBS`,
+          logo: company.logo || company.logoUrl,
+        },
+      ]
+    : [];
+
+  const applicantsChartData = jobs.slice(0, 8).map((job) => ({
+    label: job.title || "Job",
+    value:
+      Number(job.applicantsCount) ||
+      applications.filter((app) => String(app.jobId) === String(job._id || job.id))
+        .length,
+  }));
 
   return (
     <div className="space-y-8 relative pb-16">
@@ -168,11 +186,20 @@ export default function RecruiterDashboardPage() {
           Welcome back, {userName}
         </h1>
         <p className="mt-1 text-xs sm:text-sm text-gray-400">
-          Here is what&apos;s happening with your job listings and applicants today.
+          Here is what's happening with your job listings and applicants today.
         </p>
       </div>
 
       <StatsGrid stats={stats} />
+
+      <div className="rounded-2xl border border-white/10 bg-[#0b0b0f]/80 p-6">
+        <h3 className="mb-4 text-sm font-semibold text-white">Applicants per job</h3>
+        {loading ? (
+          <p className="py-8 text-center text-xs text-gray-500">Loading…</p>
+        ) : (
+          <SimpleBarChart data={applicantsChartData} color="#818cf8" height={200} />
+        )}
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <RecentApplicationsTable applications={recentApplications} />
