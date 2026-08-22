@@ -186,7 +186,6 @@ export default function SeekerHomePage() {
         <div className="rounded-2xl border border-white/10 bg-[#0b0b0f]/80 p-6 flex flex-col items-center text-center gap-4">
           <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-2xl font-bold text-white shadow-lg overflow-hidden">
             {user?.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={user.image}
                 alt={userName}

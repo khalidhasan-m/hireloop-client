@@ -1,21 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { HiUsers, HiUserGroup, HiNoSymbol, HiUserPlus } from "react-icons/hi2";
 import toast from "react-hot-toast";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5050/api";
+const getToken = async () => (await authClient.getSession()).data?.session?.token;
 export default function AdminUsersPage() {
   const searchParams = useSearchParams();
   const query = searchParams.get("q") || "";
   const [users, setUsers] = useState([]); const [role, setRole] = useState("all"); const [loading, setLoading] = useState(true);
-  const token = async () => (await authClient.getSession()).data?.session?.token;
-  const load = async () => { setLoading(true); try { const t = await token(); const params = new URLSearchParams(); if (query) params.set("email", query); if (role !== "all") params.set("role", role); const res = await fetch(`${API}/admin/users?${params}`, { headers: { Authorization: `Bearer ${t}` }, credentials: "include" }); const json = await res.json(); if (!res.ok) throw new Error(json.message); setUsers(json.data || []); } catch (e) { toast.error(e.message || "Failed to load users"); } finally { setLoading(false); } };
-  useEffect(() => { load(); }, [query, role]);
-  const action = async (id, path, body) => { try { const t = await token(); const res = await fetch(`${API}/admin/users/${id}/${path}`, { method: "PATCH", headers: { Authorization: `Bearer ${t}`, "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify(body) }); const json = await res.json(); if (!res.ok) throw new Error(json.message); toast.success(json.message); load(); } catch (e) { toast.error(e.message || "Action failed"); } };
-  const deleteUser = async (id) => { if (!window.confirm("Delete this suspended user permanently?")) return; try { const t = await token(); const res = await fetch(`${API}/admin/users/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${t}` }, credentials: "include" }); const json = await res.json(); if (!res.ok) throw new Error(json.message); toast.success(json.message); load(); } catch (e) { toast.error(e.message || "Delete failed"); } };
+  const load = useCallback(async () => { setLoading(true); try { const t = await getToken(); const params = new URLSearchParams(); if (query) params.set("email", query); if (role !== "all") params.set("role", role); const res = await fetch(`${API}/admin/users?${params}`, { headers: { Authorization: `Bearer ${t}` }, credentials: "include" }); const json = await res.json(); if (!res.ok) throw new Error(json.message); setUsers(json.data || []); } catch (e) { toast.error(e.message || "Failed to load users"); } finally { setLoading(false); } }, [query, role]);
+  useEffect(() => { load(); }, [load]);
+  const action = async (id, path, body) => { try { const t = await getToken(); const res = await fetch(`${API}/admin/users/${id}/${path}`, { method: "PATCH", headers: { Authorization: `Bearer ${t}`, "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify(body) }); const json = await res.json(); if (!res.ok) throw new Error(json.message); toast.success(json.message); load(); } catch (e) { toast.error(e.message || "Action failed"); } };
+  const deleteUser = async (id) => { if (!window.confirm("Delete this suspended user permanently?")) return; try { const t = await getToken(); const res = await fetch(`${API}/admin/users/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${t}` }, credentials: "include" }); const json = await res.json(); if (!res.ok) throw new Error(json.message); toast.success(json.message); load(); } catch (e) { toast.error(e.message || "Delete failed"); } };
   const exportList = () => { const csv = ["name,email,role,plan,status,createdAt", ...users.map((u) => [u.name, u.email, u.role, u.plan, u.isSuspended ? "Suspended" : "Active", u.createdAt].map((v) => `"${String(v || "").replaceAll('"', '""')}"`).join(","))].join("\\n"); const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); link.download = "hireloop-users.csv"; link.click(); URL.revokeObjectURL(link.href); };
   const active = users.filter((u) => !u.isSuspended).length; const recruiters = users.filter((u) => u.role === "recruiter").length; const suspended = users.filter((u) => u.isSuspended).length;
   const cards = [["Total Active Users", active, HiUsers], ["Recruiter Users", recruiters, HiUserGroup], ["Suspended Accounts", suspended, HiNoSymbol], ["Visible Results", users.length, HiUserPlus]];

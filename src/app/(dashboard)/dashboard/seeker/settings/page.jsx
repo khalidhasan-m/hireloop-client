@@ -104,7 +104,6 @@ export default function SeekerSettingsPage() {
           <div className="flex items-center gap-4 mb-6">
             <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-xl font-bold text-white overflow-hidden">
               {avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
                 <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
               ) : (
                 <HiUser className="text-2xl" />

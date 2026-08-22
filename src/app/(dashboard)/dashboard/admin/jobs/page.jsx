@@ -1,17 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
 import { HiBriefcase, HiChartBar, HiClock, HiDocumentText } from "react-icons/hi2";
 import toast from "react-hot-toast";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5050/api";
+const getToken = async () => (await authClient.getSession()).data?.session?.token;
+
 export default function AdminJobsPage() {
   const [jobs, setJobs] = useState([]); const [query, setQuery] = useState(""); const [status, setStatus] = useState("all"); const [category, setCategory] = useState("all"); const [loading, setLoading] = useState(true);
-  const getToken = async () => (await authClient.getSession()).data?.session?.token;
-  const load = async () => { try { setLoading(true); const res = await fetch(`${API}/admin/jobs`, { headers: { Authorization: `Bearer ${await getToken()}` }, credentials: "include" }); const json = await res.json(); if (!res.ok) throw new Error(json.message); setJobs(json.data || []); } catch (e) { toast.error(e.message || "Failed to load jobs"); } finally { setLoading(false); } };
-  useEffect(() => { load(); }, []);
+  const load = useCallback(async () => { try { setLoading(true); const res = await fetch(`${API}/admin/jobs`, { headers: { Authorization: `Bearer ${await getToken()}` }, credentials: "include" }); const json = await res.json(); if (!res.ok) throw new Error(json.message); setJobs(json.data || []); } catch (e) { toast.error(e.message || "Failed to load jobs"); } finally { setLoading(false); } }, []);
+  useEffect(() => { load(); }, [load]);
   const filtered = useMemo(() => jobs.filter((j) => (!query || `${j.title} ${j.companyName}`.toLowerCase().includes(query.toLowerCase())) && (status === "all" || j.status === status) && (category === "all" || j.category === category)), [jobs, query, status, category]);
   const categories = [...new Set(jobs.map((j) => j.category).filter(Boolean))];
   const moderate = async (id, action) => { try { const endpoint = action === "delete" ? `${API}/admin/jobs/${id}` : `${API}/admin/jobs/${id}/${action}`; const res = await fetch(endpoint, { method: action === "delete" ? "DELETE" : "PATCH", headers: { Authorization: `Bearer ${await getToken()}` }, credentials: "include" }); const json = await res.json(); if (!res.ok) throw new Error(json.message); toast.success(json.message || "Updated"); load(); } catch (e) { toast.error(e.message || "Action failed"); } };
