@@ -1,5 +1,6 @@
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5050/api";
+// Same-origin proxy → src/app/api/backend/[...path]/route.js forwards to BACKEND_URL.
+// No NEXT_PUBLIC_ var needed: the browser never sees the real backend origin.
+const API_BASE_URL = "/api/backend";
 
 /**
  * Checks if the response content type is JSON

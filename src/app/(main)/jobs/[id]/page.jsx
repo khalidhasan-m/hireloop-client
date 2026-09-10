@@ -80,7 +80,7 @@ export default function JobDetailsPage() {
     try {
       setSaving(true);
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5050/api"}/saved-jobs`,
+        `/api/backend/saved-jobs`,
         {
           method: "POST",
           headers: {

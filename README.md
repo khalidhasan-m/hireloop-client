@@ -4,29 +4,48 @@ HireLoop is a responsive Next.js frontend for a full-stack job portal. It provid
 
 ## Technology
 
-The client uses Next.js 16 App Router, React, Tailwind CSS, HeroUI, Better Auth, Motion, React Icons, and `react-hot-toast`. API requests are sent to the Express server through the shared client API helpers.
+The client uses Next.js 16 App Router, React, Tailwind CSS, HeroUI, Better Auth, Motion, React Icons, and `react-hot-toast`. The browser only talks to same-origin `/api/*` routes: `/api/backend/*` proxies to the Express server, `/api/auth/*` serves Better Auth, and `/api/config` serves runtime public config. There are no `NEXT_PUBLIC_*` variables in this project.
 
 ## Requirements
 
-Use Node.js 20 or newer and npm. The client expects the HireLoop server to run locally on port `5050` unless the API URL is changed.
+Use Node.js 20 or newer and npm. You need three things running for local development:
+
+| Service | Default | Purpose |
+|---|---|---|
+| This Next.js app | `http://localhost:3000` | Frontend + `/api/*` routes |
+| HireLoop server | `http://localhost:5050/api` | Express API (proxied via `/api/backend/*`) |
+| MongoDB | `mongodb://127.0.0.1:27017` | Better Auth tables (`hireloop_db`) |
 
 ## Installation and development
 
 ```bash
 npm install
-cp .env.example .env.local
+cp .env.example .env
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
-Set the client API URL in `.env.local`:
+If `.env.example` is not present in your checkout, create `.env` manually using the table in [Environment variables](#environment-variables). Never commit secrets or local environment files.
 
-```env
-NEXT_PUBLIC_API_URL=http://localhost:5050/api
-```
+## Environment variables
 
-If `.env.example` is not present in your checkout, create `.env.local` manually with the variable above. Never commit secrets or local environment files.
+No `NEXT_PUBLIC_*` variables exist in this project — the browser only calls same-origin `/api/*`, so every variable is server-only and can be stored on Vercel as type **Secret**. That is what removes the Vercel warning *"Remove the public framework prefix to keep this value private."*
+
+| Variable | Local value | Production (Vercel Secret) | Used by |
+|---|---|---|---|
+| `BACKEND_URL` | `http://localhost:5050/api` | `https://YOUR-SERVER.onrender.com/api` | `src/app/api/backend/[...path]/route.js` proxy |
+| `BETTER_AUTH_URL` | `http://localhost:3000` | `https://YOUR-APP.vercel.app` | `src/lib/auth.js` (`baseURL`) |
+| `BETTER_AUTH_SECRET` | `openssl rand -base64 32` output | fresh `openssl rand -base64 32` output | `src/lib/auth.js` (`secret`) |
+| `MONGO_DB_URI` | `mongodb://127.0.0.1:27017` | `mongodb+srv://...` | `src/lib/auth.js` (auth tables) |
+| `AUTH_DB_NAME` | `hireloop_db` | `hireloop_db` | `src/lib/auth.js` (auth tables) |
+| `STRIPE_PUBLISHABLE_KEY` | `pk_test_...` | `pk_live_...` / `pk_test_...` | `src/app/api/config/route.js` → Stripe.js at runtime |
+
+Rules:
+
+- Include `/api` in `BACKEND_URL`, no trailing slash.
+- `next build` fails fast in production when `BETTER_AUTH_SECRET` is missing — set it before deploying.
+- The Stripe publishable key is served at request time via `GET /api/config`, never baked into the JS bundle. The Stripe **secret** key lives only in `hireloop-server`, never here.
 
 ## Available commands
 
@@ -98,16 +117,22 @@ npm run build
 npm run start
 ```
 
-Set `NEXT_PUBLIC_API_URL` to the public HTTPS API URL. Configure the server CORS and `CLIENT_URL` values to allow the deployed client origin. Serve the application behind HTTPS and ensure the server’s upload URL configuration points to a persistent storage location in production.
+On Vercel (`hireloop-client > Settings > Environment Variables`): delete any `NEXT_PUBLIC_*` variables left over from older setups, add the six variables from [Environment variables](#environment-variables) above — each as type **Secret** — then `Deployments > Redeploy`. Configure the server CORS and `CLIENT_URL` values to allow the deployed client origin. Serve the application behind HTTPS and ensure the server's upload URL configuration points to a persistent storage location in production.
 
 ## Project structure
 
 ```text
 src/app/                 App Router pages and dashboard routes
+src/app/api/auth/[...all]/route.js    Better Auth handler (same-origin)
+src/app/api/backend/[...path]/route.js  Proxy → BACKEND_URL (server-only)
+src/app/api/config/route.js           Runtime public config (Stripe key)
 src/components/          Public sections and shared UI
 src/components/common/   Sidebar and dashboard header
-src/lib/api/              API request helpers
+src/lib/api/              API request helpers (call /api/backend)
+src/lib/auth.js          Server-only Better Auth + Mongo (no NEXT_PUBLIC_)
+src/lib/auth-client.js   Browser auth client (same-origin, no baseURL)
 src/lib/constants.js     Shared client plan and status constants
+src/lib/stripe.js        Stripe.js loader (fetches key from /api/config)
 tests/e2e/                Playwright regression suite
 public/images/            Homepage visual assets
 ```

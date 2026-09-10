@@ -7,7 +7,7 @@ import { HiCreditCard, HiCalendarDays, HiUserGroup, HiBuildingOffice2, HiFunnel,
 import { SEEKER_PLANS, RECRUITER_PLANS } from "@/lib/constants";
 import toast from "react-hot-toast";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5050/api";
+const API = "/api/backend";
 const PAGE_SIZE = 10;
 const money = (value) => `$${Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 const dateLabel = (value) => value ? new Date(value).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "—";

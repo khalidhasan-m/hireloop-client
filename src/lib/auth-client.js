@@ -3,14 +3,10 @@ import { inferAdditionalFields } from "better-auth/client/plugins";
 
 /**
  * Single Better Auth client instance.
- * Auth API lives on this Next.js app (/api/auth/*).
- * baseURL falls back to same-origin when env is unset.
+ * Auth API lives on this Next.js app (/api/auth/*) — same origin,
+ * so no baseURL and no NEXT_PUBLIC_ var is needed at all.
  */
 export const authClient = createAuthClient({
-  baseURL:
-    process.env.NEXT_PUBLIC_BETTER_AUTH_URL ||
-    process.env.BETTER_AUTH_URL ||
-    undefined,
   plugins: [
     inferAdditionalFields({
       user: {

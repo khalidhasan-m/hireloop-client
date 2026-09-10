@@ -76,7 +76,7 @@ export default function SeekerHomePage() {
 
       try {
         const savedRes = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5050/api"}/saved-jobs/my`,
+          `/api/backend/saved-jobs/my`,
           {
             headers: { Authorization: `Bearer ${token}` },
             credentials: "include",

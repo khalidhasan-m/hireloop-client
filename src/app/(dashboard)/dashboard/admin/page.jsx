@@ -6,7 +6,7 @@ import { authClient } from "@/lib/auth-client";
 import { HiUsers, HiBuildingOffice2, HiBriefcase, HiCreditCard, HiArrowTrendingUp, HiCalendarDays } from "react-icons/hi2";
 import toast from "react-hot-toast";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5050/api";
+const API = "/api/backend";
 const money = (value) => `$${Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 export default function AdminHomePage() {
   const [stats, setStats] = useState(null); const [analytics, setAnalytics] = useState(null); const [payments, setPayments] = useState([]); const [loading, setLoading] = useState(true); const [range, setRange] = useState(30);

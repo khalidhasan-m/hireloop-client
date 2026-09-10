@@ -21,7 +21,7 @@ export const api = {
   uploadFile: async (path, file, token) => {
     const form = new FormData();
     form.append("file", file);
-    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5050/api"}${path}`;
+    const apiUrl = `/api/backend${path}`;
     const response = await fetch(apiUrl, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },

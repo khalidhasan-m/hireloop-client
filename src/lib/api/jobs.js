@@ -1,7 +1,8 @@
 import { apiRequest } from "./client"; // Adjust path if client.js is in a different folder
 
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5050/api";
+// Same-origin backend proxy (see src/app/api/backend/[...path]/route.js).
+// No NEXT_PUBLIC_ var: the server reads BACKEND_URL, the browser only calls /api/backend.
+const BACKEND_URL = "/api/backend";
 
 /**
  * Checks if the response content type is JSON

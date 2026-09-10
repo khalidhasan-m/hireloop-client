@@ -7,7 +7,7 @@ import { authClient } from "@/lib/auth-client";
 import { HiBriefcase, HiChartBar, HiClock, HiDocumentText } from "react-icons/hi2";
 import toast from "react-hot-toast";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5050/api";
+const API = "/api/backend";
 const getToken = async () => (await authClient.getSession()).data?.session?.token;
 
 export default function AdminJobsPage() {

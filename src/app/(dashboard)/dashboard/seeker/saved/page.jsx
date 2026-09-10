@@ -41,7 +41,7 @@ export default function SavedJobsPage() {
       if (!token) return;
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5050/api"}/saved-jobs/my`,
+          `/api/backend/saved-jobs/my`,
           { headers: { Authorization: `Bearer ${token}` }, credentials: "include" },
         );
         if (res.ok) {
@@ -65,7 +65,7 @@ export default function SavedJobsPage() {
     try {
       const token = await getToken();
       await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5050/api"}/saved-jobs/${savedId}`,
+        `/api/backend/saved-jobs/${savedId}`,
         { method: "DELETE", headers: { Authorization: `Bearer ${token}` }, credentials: "include" },
       );
       setSavedJobs((prev) => prev.filter((j) => j._id !== savedId));

@@ -41,7 +41,7 @@ export default function SeekerBillingPage() {
       if (!token) return;
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5050/api"}/payments/my`,
+          `/api/backend/payments/my`,
           { headers: { Authorization: `Bearer ${token}` }, credentials: "include" },
         );
         if (res.ok) {

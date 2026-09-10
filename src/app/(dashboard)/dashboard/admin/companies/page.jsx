@@ -7,7 +7,7 @@ import { COMPANY_STATUS } from "@/lib/constants";
 import { HiBuildingOffice2, HiCheckCircle, HiClock, HiNoSymbol, HiFunnel, HiPlus } from "react-icons/hi2";
 import toast from "react-hot-toast";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5050/api";
+const API = "/api/backend";
 const PAGE_SIZE = 5;
 
 const readApiResponse = async (response, fallbackMessage) => {

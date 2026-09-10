@@ -7,7 +7,7 @@ import { api } from "@/lib/api";
 import { HiMagnifyingGlass, HiMapPin, HiBookmark, HiBriefcase } from "react-icons/hi2";
 import toast from "react-hot-toast";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5050/api";
+const API = "/api/backend";
 
 export default function SeekerBrowseJobsPage() {
   const [jobs, setJobs] = useState([]);
