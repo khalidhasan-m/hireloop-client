@@ -1,8 +1,8 @@
-import CTASection from "@/components/CTASection";
-import FeaturedJobs from "@/components/FeaturedJobs";
-import Features from "@/components/Features";
-import Hero from "@/components/Hero";
-import PricingSection from "@/components/PricingSection";
+import CTASection from "@/components/home/CTASection";
+import FeaturedJobs from "@/components/home/FeaturedJobs";
+import Features from "@/components/home/Features";
+import Hero from "@/components/home/Hero";
+import PricingSection from "@/components/home/PricingSection";
 
 export default function Home() {
   return (

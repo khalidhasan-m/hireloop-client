@@ -1,14 +1,45 @@
 "use client";
 
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
 import { HiCheck, HiShieldCheck, HiArrowRight } from "react-icons/hi2";
+import { authClient } from "@/lib/auth-client";
+import { confirmPayment } from "@/lib/api/payments";
 
 function SuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
+  const [status, setStatus] = useState(sessionId ? "verifying" : "none");
+
+  useEffect(() => {
+    if (!sessionId || status !== "verifying") return;
+    const run = async () => {
+      try {
+        const { data } = await authClient.getSession();
+        const token = data?.session?.token;
+        if (!token) throw new Error("Not signed in");
+        // Client-only confirm: the server activates the plan and records the
+        // payment so billing history shows it. No webhook required in testing.
+        await confirmPayment(sessionId, null, token);
+        setStatus("confirmed");
+      } catch (err) {
+        console.error("Payment confirmation failed:", err);
+        setStatus("failed");
+      }
+    };
+    run();
+  }, [sessionId, status]);
+
+  const statusText =
+    status === "verifying"
+      ? "Verifying your payment with the server…"
+      : status === "confirmed"
+        ? "Payment verified — your plan is now active."
+        : status === "failed"
+          ? "We could not confirm with the server. If your card was charged, sign out and back in to refresh your plan."
+          : "Awaiting Stripe session verification";
 
   return (
     <div className="relative min-h-[calc(100vh-80px)] flex items-center justify-center px-4">
@@ -37,7 +68,7 @@ function SuccessContent() {
             Welcome to Hireloop Pro
           </h1>
           <p className="text-xs sm:text-sm text-gray-400 font-medium">
-            Your Stripe checkout was completed successfully. Your subscription status will update from the verified webhook event.
+            {statusText}
           </p>
         </div>
 
@@ -51,13 +82,31 @@ function SuccessContent() {
         {/* Session ID Box */}
         <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-[#111116] border border-white/10 text-xs">
           <div className="flex items-center gap-2 text-gray-400">
-            <HiShieldCheck className="text-emerald-400 text-base shrink-0" />
-            <span className="font-medium">Session ID verified</span>
+            <HiShieldCheck className="text-base shrink-0 text-emerald-400" />
+            <span className="font-medium">
+              {status === "confirmed"
+                ? "Payment confirmed"
+                : status === "verifying"
+                  ? "Verifying payment…"
+                  : status === "failed"
+                    ? "Confirmation pending"
+                    : "Session"}
+            </span>
           </div>
           <span className="font-mono text-[11px] text-gray-500 truncate max-w-40">
-            {sessionId || "Awaiting Stripe session verification"}
+            {sessionId || "No session id"}
           </span>
         </div>
+
+        {status === "failed" && (
+          <button
+            type="button"
+            onClick={() => setStatus("verifying")}
+            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-white/10 bg-white/5 text-gray-300 text-xs font-semibold hover:bg-white/10 transition cursor-pointer"
+          >
+            Try confirming again
+          </button>
+        )}
 
         {/* Action Button */}
         <div className="pt-2">

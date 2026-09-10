@@ -1,5 +1,13 @@
 import { apiRequest } from "./client";
 
+/**
+ * Checks if the response content type is JSON
+ */
+function isJsonResponse(response) {
+  const contentType = response.headers.get("content-type");
+  return contentType && contentType.includes("application/json");
+}
+
 export const api = {
   // ==================== COMPANIES ====================
   createCompany: (data, token) => apiRequest("POST", "/companies", data, token),
@@ -10,7 +18,29 @@ export const api = {
   getCompanyById: (id) => apiRequest("GET", `/companies/${id}`),
   getProfile: (token) => apiRequest("GET", "/profile/me", null, token),
   updateProfile: (data, token) => apiRequest("PATCH", "/profile/me", data, token),
-  uploadFile: async (path, file, token) => { const form = new FormData(); form.append("file", file); const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5050/api"}${path}`, { method: "POST", headers: { Authorization: `Bearer ${token}` }, credentials: "include", body: form }); const json = await response.json(); if (!response.ok) throw new Error(json.message || "Upload failed"); return json; },
+  uploadFile: async (path, file, token) => {
+    const form = new FormData();
+    form.append("file", file);
+    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5050/api"}${path}`;
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      credentials: "include",
+      body: form,
+    });
+
+    // Check if response is JSON before parsing
+    if (!isJsonResponse(response)) {
+      throw new Error(
+        `Upload failed: Server returned non-JSON response (${response.status}). ` +
+        `Please ensure the backend API is running.`
+      );
+    }
+
+    const json = await response.json();
+    if (!response.ok) throw new Error(json.message || "Upload failed");
+    return json;
+  },
   uploadResume: (file, token) => api.uploadFile("/uploads/resume", file, token),
   uploadCoverLetter: (file, token) => api.uploadFile("/uploads/cover-letter", file, token),
   uploadAvatar: (file, token) => api.uploadFile("/uploads/avatar", file, token),

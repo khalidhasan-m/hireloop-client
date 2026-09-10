@@ -6,6 +6,7 @@ import { authClient } from "@/lib/auth-client";
 import { SEEKER_PLANS } from "@/lib/constants";
 import { HiCheckCircle, HiArrowDownTray } from "react-icons/hi2";
 import { cancelSubscription } from "@/lib/api/payments";
+import toast from "react-hot-toast";
 
 export default function SeekerBillingPage() {
   const { data: session } = authClient.useSession();
@@ -32,6 +33,7 @@ export default function SeekerBillingPage() {
       toast.error(error.message || "Unable to cancel subscription");
     }
   };
+
   const loadPayments = useCallback(async () => {
     try {
       setLoading(true);

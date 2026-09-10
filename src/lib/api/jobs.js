@@ -3,6 +3,14 @@ import { apiRequest } from "./client"; // Adjust path if client.js is in a diffe
 const BACKEND_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:5050/api";
 
+/**
+ * Checks if the response content type is JSON
+ */
+function isJsonResponse(response) {
+  const contentType = response.headers.get("content-type");
+  return contentType && contentType.includes("application/json");
+}
+
 export const api = {
   // ==========================================
   // PUBLIC ROUTES (No Token Required)
@@ -13,6 +21,12 @@ export const api = {
     try {
       const res = await fetch(`${BACKEND_URL}/jobs`, { cache: "no-store" });
       if (!res.ok) throw new Error("Failed to fetch");
+      
+      // Check if response is JSON before parsing
+      if (!isJsonResponse(res)) {
+        throw new Error("Server returned non-JSON response. Please ensure the backend API is running.");
+      }
+      
       return await res.json(); // Expected: { success: true, data: [...] }
     } catch (error) {
       console.error("API Error:", error);
@@ -27,6 +41,12 @@ export const api = {
         cache: "no-store",
       });
       if (!res.ok) throw new Error("Failed to fetch");
+      
+      // Check if response is JSON before parsing
+      if (!isJsonResponse(res)) {
+        throw new Error("Server returned non-JSON response. Please ensure the backend API is running.");
+      }
+      
       return await res.json(); // Expected: { success: true, data: {...} }
     } catch (error) {
       console.error("API Error:", error);

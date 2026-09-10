@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
 import {
   HiLockClosed,
@@ -10,21 +10,171 @@ import {
   HiCreditCard,
 } from "react-icons/hi2";
 import Link from "next/link";
+import toast from "react-hot-toast";
+import { authClient } from "@/lib/auth-client";
+import { SEEKER_PLANS, RECRUITER_PLANS } from "@/lib/constants";
+import {
+  confirmPayment,
+  createPaymentIntent as apiCreatePaymentIntent,
+} from "@/lib/api/payments";
+import { getStripe } from "@/lib/stripe";
+import {
+  Elements,
+  PaymentElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
+
+// Inner form component utilizing standard Elements so the Stripe.js testing assistant panel appears
+function EmbeddedPaymentForm({ clientSecret, planPrice, planName, planKey }) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const router = useRouter();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!stripe || !elements || isProcessing) return;
+
+    setIsProcessing(true);
+    setErrorMessage("");
+
+    const { error, paymentIntent } = await stripe.confirmPayment({
+      elements,
+      redirect: "if_required",
+    });
+
+    if (error) {
+      setErrorMessage(error.message || "An unexpected error occurred.");
+      setIsProcessing(false);
+    } else if (paymentIntent && paymentIntent.status === "succeeded") {
+      try {
+        const { data } = await authClient.getSession();
+        const token = data?.session?.token;
+        await confirmPayment(paymentIntent.id, planKey, token);
+        router.push(`/success?session_id=${paymentIntent.id}`);
+      } catch (err) {
+        setErrorMessage(
+          err.message || "Payment succeeded, but confirmation failed.",
+        );
+        setIsProcessing(false);
+      }
+    } else {
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <PaymentElement />
+
+      {errorMessage && (
+        <div className="rounded-xl border border-red-500/30 bg-red-500/5 p-3.5 text-[11px] text-red-300 leading-relaxed">
+          {errorMessage}
+        </div>
+      )}
+
+      <button
+        type="submit"
+        disabled={!stripe || !elements || isProcessing}
+        className="w-full py-3.5 rounded-xl bg-blue-600 text-white font-semibold text-xs hover:bg-blue-500 transition shadow-[0_10px_25px_rgba(37,99,235,0.4)] cursor-pointer disabled:opacity-50"
+      >
+        {isProcessing
+          ? "Processing..."
+          : `Pay $${Number(planPrice).toFixed(2)}`}
+      </button>
+    </form>
+  );
+}
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const [currency, setCurrency] = useState("BDT");
-  const [email, setEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const searchParams = useSearchParams();
 
-  const handlePay = (e) => {
-    e.preventDefault();
+  // Plan and role come from query params, e.g. /checkout?plan=PRO&role=seeker
+  const planKey = (searchParams.get("plan") || "PRO").toUpperCase();
+  const role = (searchParams.get("role") || "seeker").toLowerCase();
+  const plans = role === "recruiter" ? RECRUITER_PLANS : SEEKER_PLANS;
+  const plan = plans[planKey] || plans.PRO || SEEKER_PLANS.PRO;
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [clientSecret, setClientSecret] = useState(null);
+  const [stripePromise, setStripePromise] = useState(null);
+
+  // Initialize Stripe Promise once on mount
+  useEffect(() => {
+    setStripePromise(getStripe());
+  }, []);
+
+  // One-click test shortcuts (client-only confirm flow). No card entry needed.
+  const handleSimulateSuccess = async () => {
+    if (isLoading) return;
     setIsLoading(true);
-    // Simulate payment processing delay, then redirect to success page
-    setTimeout(() => {
-      router.push("/success?session_id=cs_test_a1b4e3j70J810x80");
-    }, 1200);
+    setError("");
+    try {
+      const { data } = await authClient.getSession();
+      const token = data?.session?.token;
+      if (!token) {
+        toast.error("Please log in to complete checkout");
+        router.push("/auth/login");
+        return;
+      }
+      const simId = `test_sim_${Date.now()}`;
+      await confirmPayment(simId, planKey, token);
+      router.push(`/success?session_id=${simId}`);
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Simulation failed — is the API running?");
+      setIsLoading(false);
+    }
   };
+
+  const handleSimulateFailure = () => {
+    setError(
+      "Payment failed (simulated). This is the error state your users see when Stripe declines a card.",
+    );
+  };
+
+  // Fetch PaymentIntent/SetupIntent Client Secret for Elements
+  const [embedError, setEmbedError] = useState("");
+  const creatingRef = useRef(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const start = async () => {
+      if (creatingRef.current) return;
+      creatingRef.current = true;
+      try {
+        const { data } = await authClient.getSession();
+        const token = data?.session?.token;
+        if (!token) {
+          if (!cancelled) setEmbedError("not-logged-in");
+          return;
+        }
+
+        // Fetching client secret from your Express backend via api/payments helper
+        const secretRes = await apiCreatePaymentIntent(planKey, role, token);
+
+        if (cancelled) return;
+        if (!secretRes?.clientSecret) {
+          throw new Error(secretRes?.message || "No client secret returned");
+        }
+        setClientSecret(secretRes.clientSecret);
+      } catch (err) {
+        console.error("Payment initialization failed:", err);
+        if (!cancelled)
+          setEmbedError(err.message || "Could not load the payment form.");
+      } finally {
+        creatingRef.current = false;
+      }
+    };
+    start();
+    return () => {
+      cancelled = true;
+    };
+  }, [planKey, role]);
 
   return (
     <div className="relative min-h-screen bg-[#030305] text-white flex flex-col justify-between selection:bg-indigo-500 selection:text-white pb-12">
@@ -48,82 +198,56 @@ export default function CheckoutPage() {
 
       {/* Main Container */}
       <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 py-10 grid grid-cols-1 lg:grid-cols-12 gap-10 my-auto">
-        {/* Left Column: Plan & Currency Picker */}
+        {/* Left Column: Order Summary */}
         <div className="lg:col-span-5 space-y-6">
-          <div className="space-y-3">
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-              Choose a Currency:
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              {/* BDT Option */}
-              <button
-                type="button"
-                onClick={() => setCurrency("BDT")}
-                className={`p-4 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between h-20 ${
-                  currency === "BDT"
-                    ? "border-white bg-[#111116] shadow-lg shadow-white/5"
-                    : "border-white/10 bg-[#0b0b0e] hover:border-white/20"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs">🇧🇩</span>
-                  <div
-                    className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${currency === "BDT" ? "border-indigo-500 bg-indigo-500" : "border-white/20"}`}
-                  >
-                    {currency === "BDT" && (
-                      <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                    )}
-                  </div>
-                </div>
-                <span className="text-sm font-semibold tracking-tight">
-                  BDT 2,553.33
-                </span>
-              </button>
-
-              {/* USD Option */}
-              <button
-                type="button"
-                onClick={() => setCurrency("USD")}
-                className={`p-4 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between h-20 ${
-                  currency === "USD"
-                    ? "border-white bg-[#111116] shadow-lg shadow-white/5"
-                    : "border-white/10 bg-[#0b0b0e] hover:border-white/20"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs">🇺🇸</span>
-                  <div
-                    className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${currency === "USD" ? "border-indigo-500 bg-indigo-500" : "border-white/20"}`}
-                  >
-                    {currency === "USD" && (
-                      <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                    )}
-                  </div>
-                </div>
-                <span className="text-sm font-semibold tracking-tight">
-                  $20.00
-                </span>
-              </button>
-            </div>
-            <p className="text-[11px] text-gray-500 font-mono">
-              1 USD = 127.6665 BDT
-            </p>
-          </div>
-
-          <div className="pt-4 border-t border-white/10 flex items-center justify-between">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="rounded-2xl border border-white/10 bg-[#0b0b0e]/80 p-6"
+          >
             <div className="space-y-1">
-              <h2 className="text-base font-semibold text-white tracking-tight">
-                Hireloop Pro Plan
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                Order Summary
+              </span>
+              <h2 className="text-xl font-bold text-white tracking-tight">
+                {plan.name} Plan
               </h2>
-              <p className="text-xs text-gray-400">Access to all features</p>
+              <p className="text-xs text-gray-400">
+                Billed monthly · Stripe Test Mode
+              </p>
             </div>
-            <span className="text-lg font-bold tracking-tight text-white">
-              {currency === "BDT" ? "BDT 2,553.33" : "$20.00"}
-            </span>
-          </div>
+
+            <div className="pt-4 border-t border-white/10 flex items-center justify-between">
+              <div className="space-y-1">
+                <h3 className="text-sm font-semibold text-white tracking-tight">
+                  Hireloop {plan.name}
+                </h3>
+                <p className="text-xs text-gray-400">
+                  {plan.features?.[0] || "Access to all features"}
+                </p>
+              </div>
+              <span className="text-lg font-bold tracking-tight text-white">
+                ${plan.price}
+                <span className="text-xs text-gray-500">/mo</span>
+              </span>
+            </div>
+
+            <div className="pt-4 border-t border-white/10 flex items-center justify-between">
+              <span className="text-sm text-gray-300">Total due today</span>
+              <span className="text-base font-bold text-white">
+                ${Number(plan.price).toFixed(2)}
+              </span>
+            </div>
+          </motion.div>
+
+          <p className="text-[11px] text-gray-500 font-mono flex items-center gap-1.5">
+            <HiShieldCheck className="text-emerald-400 text-sm" />
+            Secured by Stripe · PCI-DSS compliant
+          </p>
         </div>
 
-        {/* Right Column: Stripe Payment Form */}
+        {/* Right Column: Pay */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -132,151 +256,115 @@ export default function CheckoutPage() {
         >
           <div className="absolute top-0 left-0 right-0 h-px bg-white/15" />
 
-          {/* Express Checkout Button (Stripe Link) */}
-          <div className="space-y-4">
-            <button
-              type="button"
-              className="w-full py-3 rounded-xl bg-[#00D97E] text-black font-semibold text-xs flex items-center justify-center gap-2 hover:bg-[#00c270] transition shadow-md cursor-pointer"
-            >
-              <span className="italic font-bold tracking-tighter">link</span>
-              <span className="text-gray-900 font-normal">|</span>
-              <span className="bg-blue-600 text-white px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider">
-                VISA
-              </span>
-              <span className="font-mono text-xs">4242</span>
-            </button>
-
-            <div className="relative flex py-2 items-center">
-              <div className="grow border-t border-white/10"></div>
-              <span className="shrink mx-4 text-[11px] uppercase tracking-wider text-gray-500 font-medium">
-                Or
-              </span>
-              <div className="grow border-t border-white/10"></div>
+          <div className="flex items-center gap-3 mb-6">
+            <span className="w-10 h-10 rounded-xl bg-blue-600/15 border border-blue-600/30 flex items-center justify-center">
+              <HiCreditCard className="text-lg text-blue-400" />
+            </span>
+            <div>
+              <h2 className="text-base font-semibold text-white">
+                Pay with card
+              </h2>
+              <p className="text-xs text-gray-400">
+                Card form powered by Stripe Elements (Testing Assistant
+                enabled).
+              </p>
             </div>
           </div>
 
-          <form onSubmit={handlePay} className="space-y-5 pt-2">
-            {/* Contact Info */}
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-gray-300">
-                Contact information
-              </label>
-              <div className="space-y-1">
-                <span className="text-[11px] text-gray-400">Email</span>
-                <input
-                  type="email"
-                  required
-                  placeholder="email@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-[#111116] border border-white/10 rounded-xl px-4 py-3 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500 transition"
-                />
+          <div className="space-y-5">
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3.5 text-[11px] text-amber-300/90 leading-relaxed">
+              <span className="font-semibold">Test mode: </span>
+              Look for the floating Stripe testing assistant panel at the bottom
+              right corner of your browser window to inspect elements or
+              auto-fill test cards.
+              <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 font-mono text-[10px]">
+                <span>4242 4242 4242 4242</span>
+                <span className="text-emerald-400">Succeeds</span>
+                <span>4000 0025 0000 3155</span>
+                <span className="text-amber-400">Auth required (3DS)</span>
+                <span>4000 0000 0000 9995</span>
+                <span className="text-red-400">Declined</span>
               </div>
             </div>
 
-            {/* Payment Method Section */}
-            <div className="space-y-3 pt-2">
-              <label className="text-xs font-semibold text-gray-300">
-                Payment method
-              </label>
-
-              <div className="border border-white/10 rounded-xl bg-[#111116] p-4 space-y-4">
-                <div className="flex items-center gap-2 text-xs font-medium text-gray-300 pb-2 border-b border-white/5">
-                  <HiCreditCard className="text-indigo-400 text-base" />
-                  <span>Card</span>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="space-y-1">
-                    <span className="text-[10px] uppercase font-semibold text-gray-500">
-                      Card Information
-                    </span>
-                    <div className="relative flex items-center">
-                      <input
-                        type="text"
-                        placeholder="1234 1234 1234 1234"
-                        maxLength={19}
-                        required
-                        className="w-full bg-[#0b0b0e] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs font-mono text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500 transition"
-                      />
-                      <div className="absolute right-3 flex items-center gap-1 opacity-70">
-                        <div className="w-4 h-3 rounded bg-blue-600"></div>
-                        <div className="w-4 h-3 rounded bg-amber-500"></div>
-                        <div className="w-4 h-3 rounded bg-red-500"></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <input
-                      type="text"
-                      placeholder="MM / YY"
-                      maxLength={7}
-                      required
-                      className="bg-[#0b0b0e] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs font-mono text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500 transition"
-                    />
-                    <input
-                      type="text"
-                      placeholder="CVC"
-                      maxLength={4}
-                      required
-                      className="bg-[#0b0b0e] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs font-mono text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500 transition"
-                    />
-                  </div>
-
-                  <div className="space-y-1 pt-1">
-                    <span className="text-[10px] uppercase font-semibold text-gray-500">
-                      Cardholder Name
-                    </span>
-                    <input
-                      type="text"
-                      placeholder="Full name on card"
-                      required
-                      className="w-full bg-[#0b0b0e] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500 transition"
-                    />
-                  </div>
-
-                  <div className="space-y-1 pt-1">
-                    <span className="text-[10px] uppercase font-semibold text-gray-500">
-                      Country or Region
-                    </span>
-                    <select className="w-full bg-[#0b0b0e] border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500 transition cursor-pointer">
-                      <option>Bangladesh</option>
-                      <option>United States</option>
-                      <option>United Kingdom</option>
-                      <option>Canada</option>
-                    </select>
-                  </div>
-                </div>
+            <div className="rounded-xl border border-indigo-500/30 bg-indigo-500/5 p-3.5 text-[11px] text-indigo-300/90 space-y-2">
+              <span className="font-semibold">One-click test buttons:</span>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={isLoading}
+                  onClick={handleSimulateSuccess}
+                  className="px-3.5 py-2 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-semibold text-[11px] hover:bg-emerald-500/25 transition cursor-pointer disabled:opacity-50"
+                >
+                  ✓ Simulate success
+                </button>
+                <button
+                  type="button"
+                  disabled={isLoading}
+                  onClick={handleSimulateFailure}
+                  className="px-3.5 py-2 rounded-lg bg-red-500/15 border border-red-500/40 text-red-300 font-semibold text-[11px] hover:bg-red-500/25 transition cursor-pointer disabled:opacity-50"
+                >
+                  ✗ Simulate failure
+                </button>
               </div>
-
-              {/* Save info checkbox */}
-              <label className="flex items-start gap-3 pt-2 cursor-pointer group">
-                <input
-                  type="checkbox"
-                  defaultChecked
-                  className="w-4 h-4 mt-0.5 rounded border-white/20 bg-[#111116] text-indigo-600 focus:ring-0 accent-indigo-500 cursor-pointer"
-                />
-                <div className="space-y-0.5">
-                  <span className="text-xs text-gray-200 font-medium group-hover:text-white transition">
-                    Save my information for faster checkout
-                  </span>
-                  <p className="text-[11px] text-gray-500">
-                    Pay securely on this site and everywhere Link is accepted.
-                  </p>
-                </div>
-              </label>
             </div>
 
-            {/* Pay Button */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-3.5 rounded-xl bg-blue-600 text-white font-semibold text-xs hover:bg-blue-500 transition shadow-[0_10px_25px_rgba(37,99,235,0.4)] cursor-pointer disabled:opacity-50"
-            >
-              {isLoading ? "Processing payment..." : "Pay"}
-            </button>
-          </form>
+            {error && (
+              <div className="rounded-xl border border-red-500/30 bg-red-500/5 p-3.5 text-[11px] text-red-300 leading-relaxed">
+                {error}
+              </div>
+            )}
+
+            {embedError ? (
+              <div className="space-y-3">
+                <p className="text-[11px] text-gray-400">
+                  {embedError === "not-logged-in"
+                    ? "Log in to load the payment form."
+                    : `Card form failed to load (${embedError}).`}
+                </p>
+                {embedError === "not-logged-in" && (
+                  <button
+                    type="button"
+                    onClick={() => router.push("/auth/login")}
+                    className="w-full py-3.5 rounded-xl bg-blue-600 text-white font-semibold text-xs hover:bg-blue-500 transition cursor-pointer"
+                  >
+                    Log in
+                  </button>
+                )}
+              </div>
+            ) : clientSecret && stripePromise ? (
+              <Elements stripe={stripePromise} options={{ clientSecret }}>
+                <EmbeddedPaymentForm
+                  clientSecret={clientSecret}
+                  planPrice={plan.price}
+                  planName={plan.name}
+                  planKey={planKey}
+                />
+              </Elements>
+            ) : (
+              <div className="py-16 text-center text-xs text-gray-400">
+                Loading secure payment form...
+              </div>
+            )}
+
+            <p className="text-[11px] text-gray-500 text-center">
+              By paying you agree to the{" "}
+              <Link
+                href="/terms"
+                className="text-gray-400 hover:text-white underline"
+              >
+                Terms
+              </Link>{" "}
+              and{" "}
+              <Link
+                href="/privacy"
+                className="text-gray-400 hover:text-white underline"
+              >
+                Privacy Policy
+              </Link>
+              .
+            </p>
+          </div>
         </motion.div>
       </div>
 

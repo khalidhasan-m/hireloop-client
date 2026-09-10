@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+import React, { useState } from "react";
 import { Button } from "@heroui/react";
 import { authClient } from "@/lib/auth-client";
 import { dashboardPathForRole } from "@/lib/role-redirect";
@@ -16,7 +17,17 @@ import {
 } from "react-icons/hi2";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next");
 
   const [formData, setFormData] = useState({
     email: "",
@@ -98,7 +109,13 @@ export default function LoginPage() {
           userRole = sessionRes?.data?.user?.role;
         }
 
-        router.push(dashboardPathForRole(userRole));
+        // Return to the private page the guard saved in ?next= (only if same role).
+        const fallback = dashboardPathForRole(userRole);
+        const target =
+          next && next.startsWith(`/dashboard/${(userRole || "seeker").toLowerCase()}`)
+            ? next
+            : fallback;
+        router.push(target);
         router.refresh();
       }
     } catch (err) {

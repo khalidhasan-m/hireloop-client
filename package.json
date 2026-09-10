@@ -17,6 +17,8 @@
     "@gravity-ui/icons": "^2.21.0",
     "@heroui/react": "^3.2.4",
     "@heroui/styles": "^3.2.4",
+    "@stripe/react-stripe-js": "^6.9.0",
+    "@stripe/stripe-js": "^9.15.0",
     "better-auth": "^1.6.29",
     "mongodb": "^7.5.0",
     "motion": "^13.1.0",

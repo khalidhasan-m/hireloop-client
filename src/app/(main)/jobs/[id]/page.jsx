@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { motion } from "motion/react";
+import { authClient } from "@/lib/auth-client";
+import toast from "react-hot-toast";
 import {
   HiBookmark,
   HiOutlineBookmark,
@@ -23,28 +25,123 @@ import { api } from "@/lib/api";
 
 export default function JobDetailsPage() {
   const params = useParams();
+  const router = useRouter();
   const id = params?.id;
 
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [showApply, setShowApply] = useState(false);
+  const [coverLetter, setCoverLetter] = useState("");
+  const [coverLetterFile, setCoverLetterFile] = useState(null);
+  const [applying, setApplying] = useState(false);
 
   useEffect(() => {
     if (!id) return;
+    let active = true;
     async function fetchJobDetails() {
       try {
         const response = await api.getJobById(id);
-        if (response && response.success) {
+        if (active && response && response.success) {
           setJob(response.data);
         }
       } catch (error) {
         console.error("Failed to fetch job details:", error);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     }
     fetchJobDetails();
+    return () => { active = false; };
   }, [id]);
+
+  const isSeekerSession = async () => {
+    const { data } = await authClient.getSession();
+    return {
+      token: data?.session?.token || null,
+      role: (data?.user?.role || "").toLowerCase(),
+      hasUser: Boolean(data?.user),
+    };
+  };
+
+  // Only seekers can save. Guests go to signup, recruiters/admins get blocked.
+  const handleSaveClick = async () => {
+    const session = await isSeekerSession();
+    if (!session.hasUser || !session.token) {
+      toast.error("Please log in as a seeker to save jobs");
+      router.push("/auth/signup");
+      return;
+    }
+    if (session.role !== "seeker") {
+      toast.error("Only job seekers can save jobs.");
+      return;
+    }
+    try {
+      setSaving(true);
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5050/api"}/saved-jobs`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.token}`,
+          },
+          credentials: "include",
+          body: JSON.stringify({ jobId: String(job?._id || id) }),
+        },
+      );
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.message || "Failed to save");
+      setIsSaved(true);
+      toast.success("Job saved!");
+    } catch (err) {
+      toast.error(err.message || "Failed to save job");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Only seekers can apply. Guests go to signup, recruiters/admins get blocked.
+  const handleApplyClick = async () => {
+    const session = await isSeekerSession();
+    if (!session.hasUser) {
+      router.push("/auth/signup");
+      return;
+    }
+    if (session.role !== "seeker") {
+      toast.error("Only job seekers can apply. Please log in as a seeker.");
+      return;
+    }
+    setCoverLetter("");
+    setCoverLetterFile(null);
+    setShowApply(true);
+  };
+
+  const submitApplication = async (event) => {
+    event.preventDefault();
+    if (!job) return;
+    try {
+      setApplying(true);
+      const session = await isSeekerSession();
+      const token = session.token;
+      if (!token) { toast.error("Please log in to apply"); return; }
+      if (session.role !== "seeker") {
+        toast.error("Only job seekers can apply.");
+        setShowApply(false);
+        return;
+      }
+      let coverLetterValue = coverLetter.trim();
+      if (coverLetterFile) {
+        const uploaded = await api.uploadCoverLetter(coverLetterFile, token);
+        coverLetterValue = uploaded?.data?.url || coverLetterValue;
+      }
+      await api.createApplication({ jobId: String(job._id || id), coverLetter: coverLetterValue || null }, token);
+      toast.success("Application submitted!");
+      setShowApply(false);
+    } catch (err) { toast.error(err.message || "Failed to submit application"); }
+    finally { setApplying(false); }
+  };
 
   if (loading) {
     return (
@@ -122,8 +219,12 @@ export default function JobDetailsPage() {
 
           <div className="flex items-center gap-3 w-full md:w-auto">
             <button
-              onClick={() => setIsSaved(!isSaved)}
-              className="w-11 h-11 rounded-xl bg-[#111116] border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:border-white/20 transition cursor-pointer"
+              type="button"
+              onClick={handleSaveClick}
+              disabled={saving}
+              title="Save job (seekers only)"
+              aria-label="Save job"
+              className="w-11 h-11 rounded-xl bg-[#111116] border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:border-white/20 transition cursor-pointer disabled:opacity-50"
             >
               {isSaved ? (
                 <HiBookmark className="text-indigo-400 text-lg" />
@@ -131,12 +232,13 @@ export default function JobDetailsPage() {
                 <HiOutlineBookmark className="text-lg" />
               )}
             </button>
-            <Link
-              href="/auth/signup"
+            <button
+              type="button"
+              onClick={handleApplyClick}
               className="flex-1 md:flex-none px-6 py-3 rounded-xl bg-white text-black text-xs font-semibold hover:bg-gray-200 transition shadow-[0_10px_30px_rgba(255,255,255,0.15)] text-center cursor-pointer"
             >
               Apply Now
-            </Link>
+            </button>
           </div>
         </motion.div>
 
@@ -346,6 +448,8 @@ export default function JobDetailsPage() {
           </motion.div>
         </div>
       </div>
+
+      {showApply && job && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-labelledby="apply-job-title"><form onSubmit={submitApplication} className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#151519] p-6 shadow-2xl"><div className="flex items-start justify-between gap-4"><div><p className="text-[10px] uppercase tracking-widest text-indigo-400">Job application</p><h2 id="apply-job-title" className="mt-1 text-lg font-bold text-white">Apply for {job.title}</h2><p className="mt-1 text-xs text-gray-400">{job.companyName || "Hiring company"}</p></div><button type="button" aria-label="Close application dialog" onClick={() => setShowApply(false)} className="text-xl text-gray-400 hover:text-white">×</button></div><label className="mt-6 block text-xs font-medium text-gray-300">Cover letter<textarea value={coverLetter} onChange={(event) => setCoverLetter(event.target.value)} rows={6} placeholder="Tell the hiring team why you are a strong fit..." className="mt-2 w-full resize-y rounded-xl border border-white/10 bg-white/[.04] p-3 text-xs text-white outline-none focus:border-indigo-400" /></label><label className="mt-4 block text-xs font-medium text-gray-300">Attach cover letter file <span className="text-gray-500">(PDF, DOC, DOCX, or TXT)</span><input type="file" accept=".pdf,.doc,.docx,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" onChange={(event) => setCoverLetterFile(event.target.files?.[0] || null)} className="mt-2 block w-full rounded-xl border border-dashed border-white/15 bg-white/[.03] p-3 text-xs text-gray-400 file:mr-3 file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-black" />{coverLetterFile && <span className="mt-2 block text-[10px] text-indigo-300">Selected: {coverLetterFile.name}</span>}</label><div className="mt-6 flex justify-end gap-3"><button type="button" onClick={() => setShowApply(false)} className="px-4 py-2 rounded-xl border border-white/10 text-[11px] text-gray-300 hover:bg-white/5">Cancel</button><button type="submit" disabled={applying} className="px-5 py-2 rounded-xl bg-white text-black text-[11px] font-bold hover:bg-gray-200 disabled:opacity-50">{applying ? "Submitting..." : "Submit application"}</button></div></form></div>}
     </div>
   );
 }
