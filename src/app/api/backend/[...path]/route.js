@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 // Server-only backend origin. No NEXT_PUBLIC_ prefix on purpose:
 // the browser never sees this value — it only calls same-origin
 // /api/backend/* and Next.js forwards to the real API server.
