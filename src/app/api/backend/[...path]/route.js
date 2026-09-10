@@ -4,7 +4,11 @@ import { NextResponse } from "next/server";
 // the browser never sees this value — it only calls same-origin
 // /api/backend/* and Next.js forwards to the real API server.
 function getBackendBase() {
-  const raw = process.env.BACKEND_URL || "http://localhost:5050/api";
+  // Production backend (Vercel serverless Express).
+  // Default intentionally points at the deployed API, NOT localhost:
+  // Vercel has no localhost:5050, so the fallback must be the live URL.
+  // Override per-environment with BACKEND_URL (server-only, no NEXT_PUBLIC_).
+  const raw = process.env.BACKEND_URL || "https://hireloop-server-omega-one.vercel.app/api";
   return raw.replace(/\/+$/, "");
 }
 
