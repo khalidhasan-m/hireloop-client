@@ -2,6 +2,58 @@
 
 HireLoop is a responsive Next.js frontend for a full-stack job portal. It provides public job and company discovery, Seeker workflows, Recruiter workflows, Admin management, profile settings, messaging and notifications, and Stripe billing interfaces.
 
+## Screenshots
+
+UI previews of the live application (dark theme).
+
+### Landing page
+
+![Homepage](docs/screenshots/homepage.png)
+
+### Job discovery
+
+![Browse Jobs](docs/screenshots/jobs.png)
+
+### Companies
+
+![Browse Companies](docs/screenshots/companies.png)
+
+### Pricing (Job Seekers)
+
+![Pricing - Job Seekers](docs/screenshots/pricing-seekers.png)
+
+### Pricing (Recruiters)
+
+![Pricing - Recruiters](docs/screenshots/pricing-recruiters.png)
+
+### Authentication
+
+| Login | Sign up |
+|-------|--------|
+| ![Login](docs/screenshots/auth-login.png) | ![Sign up](docs/screenshots/auth-signup.png) |
+
+### Dashboards
+
+**Seeker**
+
+![Seeker Dashboard](docs/screenshots/dashboard-seeker.png)
+
+**Recruiter**
+
+![Recruiter Dashboard](docs/screenshots/dashboard-recruiter.png)
+
+**Admin**
+
+![Admin Dashboard](docs/screenshots/dashboard-admin.png)
+
+### Error states
+
+| 404 Page Not Found | Job Not Found |
+|--------------------|---------------|
+| ![404](docs/screenshots/404.png) | ![Job Not Found](docs/screenshots/job-not-found.png) |
+
+> Place the corresponding PNG files in `docs/screenshots/` using the filenames shown above.
+
 ## Technology
 
 The client uses Next.js 16 App Router, React, Tailwind CSS, HeroUI, Better Auth, Motion, React Icons, and `react-hot-toast`. The browser only talks to same-origin `/api/*` routes: `/api/backend/*` proxies to the Express server, `/api/auth/*` serves Better Auth, and `/api/config` serves runtime public config. There are no `NEXT_PUBLIC_*` variables in this project.
@@ -84,7 +136,6 @@ Playwright generates local reports and test results that are ignored by Git. Bas
 - `/dashboard/seeker/billing` — subscription and payment management.
 - `/dashboard/seeker/settings` — profile, avatar, resume, and security settings.
 - `/dashboard/recruiter` — Recruiter overview.
-- `/dashboard/recruiter/company` — company registration and management.
 - `/dashboard/recruiter/jobs` — job creation and management.
 - `/dashboard/recruiter/applications` — applicant review and status updates.
 - `/dashboard/recruiter/billing` — Recruiter subscription management.
@@ -135,6 +186,7 @@ src/lib/constants.js     Shared client plan and status constants
 src/lib/stripe.js        Stripe.js loader (fetches key from /api/config)
 tests/e2e/                Playwright regression suite
 public/images/            Homepage visual assets
+docs/screenshots/         UI screenshots for README
 ```
 
 The client is API-backed. Pages should use live responses and loading/empty states rather than hardcoded demo records.
