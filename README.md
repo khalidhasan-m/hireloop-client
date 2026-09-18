@@ -46,6 +46,10 @@ UI previews of the live application (dark theme).
 
 ![Admin Dashboard](docs/screenshots/dashboard-admin.png)
 
+### Loading state
+
+![Loading Workspace](docs/screenshots/loading-workspace.png)
+
 ### Error states
 
 | 404 Page Not Found | Job Not Found |
